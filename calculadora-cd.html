@@ -27,7 +27,7 @@
             <img src="./images/logo-qdelicia.png" alt="Logomarca Qdelícia Frutas"> 
         </div>
         <h1>Calculadora CD - Nordestão</h1>
-        <p>Controle de descarregamento por KG e Palete.</p>
+        <p>Relatório de descarrego</p>
     </header>
 
     <nav>
@@ -42,26 +42,26 @@
         <section id="target-input-section" class="calculator-section">
             <h2>1. Dados da Nota Fiscal</h2>
             <div class="input-group">
-                <label for="input-total-kg">Volume Total da Nota (KG)</label>
-                <input type="number" id="input-total-kg" placeholder="Ex: 5000" step="0.01" min="0">
+                <label for="input-total-kg">Peso Total da Nota (KG)</label>
+                <input type="number" id="input-total-kg" placeholder="Ex: 3990" step="0.01" min="0">
                 
                 <button id="calculate-targets-btn" class="action-btn primary-btn" disabled>
-                    <i class="fas fa-calculator"></i> Calcular Metas
+                    <i class="fas fa-calculator"></i> Iniciar conferência 
                 </button>
             </div>
         </section>
 
         <section id="target-summary-section" class="calculator-section" style="display: none;">
-            <h2>2. Metas de Descarrego (Estimativa)</h2>
+            <h2>2. Dados do descarrego</h2>
             <div class="summary-info">
-                <p><strong>KG Médio/Palete:</strong> <span id="target-kg-per-pallet">0.00</span> kg</p>
+                <p><strong>Palete deve ter em média:</strong> <span id="target-kg-per-pallet">0.00</span> kg</p>
                 <p><strong>Total de Caixas:</strong> <span id="target-total-caixas">0</span> caixas</p>
                 <p><strong>Total de Paletes:</strong> <span id="target-total-paletes">0.00</span> paletes</p>
             </div>
         </section>
         
         <section id="discharge-input-section" class="calculator-section" style="display: none;">
-            <h2>3. Registrar Descarregamento (Palete)</h2>
+            <h2>3. Adicionar Pesagem</h2>
             <div class="input-group-horizontal">
                 <div class="input-field">
                     <label for="input-discharge-kg">KG Conferidos</label>
@@ -73,23 +73,23 @@
                 </div>
             </div>
             <button id="add-discharge-btn" class="action-btn secondary-btn">
-                <i class="fas fa-plus"></i> Adicionar Descarrego
+                <i class="fas fa-plus"></i> Adicionar 
             </button>
         </section>
 
         <section id="discharge-summary-section" class="calculator-section" style="display: none;">
             <h2>4. Descarregado até o momento</h2>
             <div class="summary-info">
-                <p><strong>Total KG Descarregado:</strong> <span id="total-discharged-kg">0.00</span> kg</p>
-                <p><strong>Total Caixas Descarregadas:</strong> <span id="total-discharged-caixas">0</span> caixas</p>
+                <p><strong>Total Descarregado:</strong> <span id="total-discharged-kg">0.00</span> kg</p>
+                <p><strong>Total de Caixas Descarregadas:</strong> <span id="total-discharged-caixas">0</span> caixas</p>
             </div>
             <table class="discharge-table">
                 <thead>
                     <tr>
-                        <th>Palete #</th>
-                        <th>KG</th>
-                        <th>Caixas</th>
-                        <th>Peso Médio/Caixa</th>
+                        <th>Qtde</th>
+                        <th>Peso</th>
+                        <th>Cxs</th>
+                        <th>Média/Cx</th>
                         <th>Ação</th>
                     </tr>
                 </thead>
