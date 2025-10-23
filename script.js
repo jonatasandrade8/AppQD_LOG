@@ -43,7 +43,7 @@ const APP_DATA = {
         "Pacovan",
         "Comprida",
         "Leite",
-        "NAnica",
+        "Nanica",
         "Goiaba",
         "Abacaxi"
     ],
@@ -323,82 +323,82 @@ if (isDevolucaoPage) {
 // --- LÓGICA DA CÂMERA (Marca d'água organizada) ---
 
 /**
- * @description Desenha a marca d'água na imagem capturada, adaptando para a página e organizando as informações.
- */
+ * @description Desenha a marca d'água na imagem capturada, adaptando para a página e organizando as informações.
+ */
 function drawWatermark(canvas, ctx) {
-    // Coletas de dados
-    const entregador = selectEntregador ? selectEntregador.value || 'N/A' : 'N/A';
-    const rede = selectRede ? selectRede.value || 'N/A' : 'N/A';
-    const loja = selectLoja ? selectLoja.value || 'N/A' : 'N/A';
-    const status = selectStatus && selectStatus.value ? selectStatus.value.toUpperCase() : null;
+    // Coletas de dados
+    const entregador = selectEntregador ? selectEntregador.value || 'N/A' : 'N/A';
+    const rede = selectRede ? selectRede.value || 'N/A' : 'N/A';
+    const loja = selectLoja ? selectLoja.value || 'N/A' : 'N/A';
+    const status = selectStatus && selectStatus.value ? selectStatus.value.toUpperCase() : null;
 
-    // 1. Data e Hora
-    const date = new Date();
-    const dateTimeText = date.toLocaleDateString('pt-BR', {
-        day: '2-digit', month: '2-digit', year: 'numeric',
-        hour: '2-digit', minute: '2-digit', second: '2-digit'
-    });
-    
-    // --- Montagem do Texto da Marca D'água (Organizado) ---
-    const lines = [];
-    
-    // Linha 1: Data e Hora
-    lines.push(`📅 ${dateTimeText}`);
-    
-    // Linha 2: Entregador
-    lines.push(`🚚 Entregador: ${entregador}`);
-    
-    // Linha 3: Localização
-    lines.push(`🏢 Rede: ${rede} | 📍 PDV: ${loja}`);
+    // 1. Data e Hora
+    const date = new Date();
+    const dateTimeText = date.toLocaleDateString('pt-BR', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+    });
+    
+    // --- Montagem do Texto da Marca D'água (Organizado) ---
+    const lines = [];
+    
+    // Linha 1: Data e Hora
+    lines.push(`${dateTimeText}`);
+    
+    // Linha 2: Entregador
+    lines.push(`Entregador: ${entregador}`);
+    
+    // Linha 3: Localização
+    lines.push(`Rede: ${rede} || Loja: ${loja}`);
 
-    if (!isDevolucaoPage) {
-        // Câmera Geral: Adiciona Status
-        lines.push(`⚡ STATUS: ${status || 'N/A'}`);
+    if (!isDevolucaoPage) {
+        // Câmera Geral: Adiciona Status
+        lines.push(`STATUS: ${status || 'N/A'}`);
 
-    } else {
-        // Câmera de Devolução: Adiciona Motivo, Produto e Quantidade
-        const motivo = selectMotivo ? selectMotivo.value || 'N/A' : 'N/A';
-        const produto = selectProduto ? selectProduto.value || 'N/A' : 'N/A';
-        const quantidade = inputQuantidade ? inputQuantidade.value.trim() : 'N/A';
-        
-        lines.push(`💔 Motivo: ${motivo}`);
-        lines.push(`🍌 Produto: ${produto} | ⚖️ QTD: ${quantidade} KG/Caixas`);
-    }
-    
-    // --- Desenho no Canvas ---
-    
-    // Posições baseadas no tamanho do canvas
-    const baseFontSize = canvas.height / 50; 
-    const lineHeight = baseFontSize * 1.3;
-    const margin = canvas.width / 50;
+    } else {
+        // Câmera de Devolução: Adiciona Motivo, Produto e Quantidade
+        const motivo = selectMotivo ? selectMotivo.value || 'N/A' : 'N/A';
+        const produto = selectProduto ? selectProduto.value || 'N/A' : 'N/A';
+        const quantidade = inputQuantidade ? inputQuantidade.value.trim() : 'N/A';
+        
+        lines.push(`Motivo: ${motivo}`);
+        lines.push(`Produto: ${produto} | ⚖️ QTD: ${quantidade} KG/Caixas`);
+    }
+    
+    // --- Desenho no Canvas ---
+    
+    // Posições baseadas no tamanho do canvas
+    const baseFontSize = canvas.height / 50; 
+    const lineHeight = baseFontSize * 1.3;
+    const margin = canvas.width / 50;
 
-    // Estilo do texto
-    ctx.font = `600 ${baseFontSize}px Arial, sans-serif`; 
-    ctx.fillStyle = 'rgba(255, 255, 255, 1)'; 
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.9)'; 
-    ctx.lineWidth = 4; 
-    ctx.textAlign = 'right';
+    // Estilo do texto
+    ctx.font = `600 ${baseFontSize}px Arial, sans-serif`; 
+    ctx.fillStyle = 'rgba(255, 255, 255, 1)'; 
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.9)'; 
+    ctx.lineWidth = 4; 
+    ctx.textAlign = 'right';
 
-    // Posição para o texto (canto inferior direito, desenhando de baixo para cima)
-    const xText = canvas.width - margin;
-    let yText = canvas.height - margin;
+    // Posição para o texto (canto inferior direito, desenhando de baixo para cima)
+    const xText = canvas.width - margin;
+    let yText = canvas.height - margin;
 
-    // Desenha cada linha, invertendo a ordem para desenhar de baixo para cima
-    lines.reverse().forEach(line => {
-        ctx.strokeText(line, xText, yText);
-        ctx.fillText(line, xText, yText);
-        yText -= lineHeight; 
-    });
+    // Desenha cada linha, invertendo a ordem para desenhar de baixo para cima
+    lines.reverse().forEach(line => {
+        ctx.strokeText(line, xText, yText);
+        ctx.fillText(line, xText, yText);
+        yText -= lineHeight; 
+    });
 
-    // Logomarca (Canto Inferior Esquerdo)
-    const logoHeight = canvas.height / 8; 
-    const logoWidth = (logoImage.width / logoImage.height) * logoHeight;
-    const xLogo = margin;
-    const yLogo = canvas.height - logoHeight - margin;
+    // Logomarca (Canto Superior Esquerdo)
+    const logoHeight = canvas.height / 8; 
+    const logoWidth = (logoImage.width / logoImage.height) * logoHeight;
+    const xLogo = margin;
+    const yLogo = margin; // <--- Posição superior esquerda
 
-    if (logoImage.complete && logoImage.naturalHeight !== 0) {
-        ctx.drawImage(logoImage, xLogo, yLogo, logoWidth, logoHeight);
-    }
+    if (logoImage.complete && logoImage.naturalHeight !== 0) {
+        ctx.drawImage(logoImage, xLogo, yLogo, logoWidth, logoHeight);
+    }
 }
 
 
@@ -472,20 +472,20 @@ function updateDateTimeWatermark() {
         const status = selectStatus && selectStatus.value ? selectStatus.value.toUpperCase() : null;
 
         // Monta o texto de acordo com a página (para o elemento HTML da visualização)
-        let watermarkContent = `📅 ${dateTimeText}`;
-        watermarkContent += `<br>🚚 Entregador: ${entregador}`;
-        watermarkContent += `<br>🏢 Rede: ${rede} | 📍 PDV: ${loja}`;
+        let watermarkContent = `${dateTimeText}`;
+        watermarkContent += `<br>Entregador: ${entregador}`;
+        watermarkContent += `<br>Rede: ${rede} || Loja: ${loja}`;
 
 
         if (!isDevolucaoPage) {
-            watermarkContent += `<br>⚡ STATUS: ${status || 'N/A'}`; 
+            watermarkContent += `<br>STATUS: ${status || 'N/A'}`; 
         } else {
             const motivo = selectMotivo ? selectMotivo.value || 'N/A' : 'N/A';
             const produto = selectProduto ? selectProduto.value || 'N/A' : 'N/A';
             const quantidade = inputQuantidade ? inputQuantidade.value.trim() : 'N/A'; 
             
-            watermarkContent += `<br>💔 Motivo: ${motivo}`;
-            watermarkContent += `<br>🍌 Produto: ${produto} | ⚖️ QTD: ${quantidade} KG/Caixas`;
+            watermarkContent += `<br>Motivo: ${motivo}`;
+            watermarkContent += `<br>Produto: ${produto} | ⚖️ QTD: ${quantidade} KG/Caixas`;
         }
         
         dateTimeElement.innerHTML = watermarkContent;
