@@ -560,20 +560,22 @@ footer {
     gap: 10px;
 }
 
-/* Inputs de Descarregamento em linha (se houver espaço) */
-@media (min-width: 600px) {
-    .discharge-input-box .controls-row {
-        flex-direction: row;
-    }
-    .discharge-input-box .input-group {
-        flex: 1;
-        margin-bottom: 0;
-    }
-    .discharge-input-box .action-btn {
-        width: auto; 
-        margin-top: 0;
-        min-width: 120px;
-    }
+/* === ESTILOS PARA AUMENTAR INPUTS DE DESCARREGAMENTO (SOLICITADO) === */
+.discharge-input-box input[type="number"],
+.discharge-input-box input[type="text"] {
+    /* Aumenta a altura da caixa */
+    padding: 15px; 
+    /* Aumenta o tamanho da fonte */
+    font-size: 1.2rem; 
+    /* Garante altura mínima para inputs */
+    min-height: 50px; 
+}
+
+/* Ajusta o botão "Adicionar Registro" para ter altura consistente */
+.discharge-input-box .action-btn {
+    padding: 15px 20px; /* Aumenta o padding do botão */
+    font-size: 1.1rem; /* Aumenta um pouco a fonte do botão */
+    min-height: 50px; /* Garante que o botão tenha a mesma altura dos inputs */
 }
 
 /* Tabela de Descarregamento */
@@ -721,6 +723,19 @@ footer {
     
     .discharge-input-box .input-group {
         flex: 1;
+    }
+    
+    /* Ajuste específico para desktop: garante que os elementos de descarregamento fiquem alinhados */
+    .discharge-input-box input[type="number"],
+    .discharge-input-box input[type="text"],
+    .discharge-input-box .action-btn {
+        height: 50px; 
+    }
+    
+    .discharge-input-box .action-btn {
+        width: auto; 
+        margin-top: 0;
+        min-width: 120px;
     }
 }
 /* Adicionar em style.css para consistência visual */
