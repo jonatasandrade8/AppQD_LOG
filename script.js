@@ -2,7 +2,7 @@
 // ATENÇÃO: Os dados do entregador são separados da Rede/Loja, conforme solicitado.
 const APP_DATA = {
     // Entregadores (lista independente)
-    OPERAS: [
+    ENTREGADORES: [
         "José Luiz",
         "Paulino",
         "Antonio Ananias",
