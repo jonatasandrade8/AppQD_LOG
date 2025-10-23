@@ -1,0 +1,643 @@
+/* ===================== RESET E CONFIGURAÇÕES GLOBAIS ===================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    /* Cores e Variáveis */
+    --primary-color: #5d3fd3; /* Roxo principal */
+    --secondary-color: #8b5cf6; /* Roxo mais claro */
+    --tertiary-color: #a78bfa; /* Roxo ainda mais claro */
+    --accent-color: #39ff14; /* Verde neon para destaque (mantido para outros elementos) */
+    --bg-light: #f3f0ff; /* Fundo claro com roxo */
+    --white: #ffffff;
+    --text-dark: #2c0e5a; /* Roxo escuro para texto */
+    --shadow: rgba(0, 0, 0, 0.1);
+    --border-radius: 8px;
+    --transition: all 0.3s ease;
+    --max-width: 1200px;
+    --gradient: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    background-color: var(--bg-light);
+    color: var(--text-dark);
+    line-height: 1.6;
+    font-size: 14px; /* Mobile First */
+    padding-top: 100px; /* Espaço para o cabeçalho fixo */
+}
+
+a {
+    text-decoration: none;
+    color: var(--primary-color);
+    transition: color 0.2s;
+}
+
+a:hover {
+    color: var(--secondary-color);
+}
+
+
+/* =========================== CABEÇALHO E NAV =========================== */
+
+header {
+    background-color: var(--white);
+    color: var(--text-dark);
+    text-align: center;
+    padding: 15px 10px;
+    box-shadow: 0 2px 4px var(--shadow);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.logo-placeholder {
+    display: none; /* Escondido em mobile */
+}
+
+header h1 {
+    font-size: 1.5rem;
+    margin: 0;
+    flex-grow: 1; /* Permite que o título ocupe o espaço */
+    text-align: center;
+}
+
+header p {
+    font-size: 0.9rem;
+    margin: 0;
+    color: var(--primary-color);
+    text-align: center;
+    position: absolute;
+    bottom: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+}
+
+.menu-toggle {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0 15px;
+    z-index: 101;
+}
+
+nav {
+    display: none; /* Escondido em mobile, usado apenas em desktop */
+}
+
+/* =========================== MENU LATERAL =========================== */
+
+.side-menu {
+    position: fixed;
+    top: 0;
+    left: -250px; /* Escondido */
+    width: 250px;
+    height: 100%;
+    background-color: var(--text-dark);
+    padding-top: 80px;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+    transition: left 0.3s ease;
+    z-index: 102;
+    display: flex;
+    flex-direction: column;
+}
+
+.side-menu.open {
+    left: 0; /* Aberto */
+}
+
+.side-menu a {
+    color: var(--white);
+    padding: 15px 20px;
+    text-decoration: none;
+    display: block;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    transition: var(--transition);
+}
+
+.side-menu a:last-child {
+    border-bottom: none;
+}
+
+.side-menu a i {
+    margin-right: 10px;
+    width: 20px;
+    text-align: center;
+}
+
+.side-menu a:hover,
+.side-menu a.active {
+    background-color: var(--primary-color);
+    color: var(--white);
+    box-shadow: inset 5px 0 0 var(--accent-color);
+}
+
+.menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 101;
+    display: none;
+}
+
+.menu-overlay.open {
+    display: block;
+}
+
+/* =========================== CONTEÚDO PRINCIPAL =========================== */
+
+main {
+    padding: 15px;
+    margin-top: 0;
+}
+
+.card {
+    background-color: var(--white);
+    padding: 20px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 6px var(--shadow);
+    margin-bottom: 20px;
+}
+
+h2 {
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--tertiary-color);
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+    font-size: 1.4rem;
+}
+
+ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+ul li {
+    background-color: var(--bg-light);
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    border-left: 4px solid var(--secondary-color);
+}
+
+/* =========================== FORMULÁRIOS / INPUTS =========================== */
+
+.input-group {
+    margin-bottom: 15px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: var(--text-dark);
+}
+
+.input-group select,
+.input-group input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--tertiary-color);
+    border-radius: var(--border-radius);
+    background-color: var(--bg-light);
+    font-size: 1rem;
+    color: var(--text-dark);
+    -webkit-appearance: none; /* Remove a seta padrão em alguns navegadores */
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235d3fd3'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px top 50%;
+    background-size: 20px;
+}
+
+
+/* =========================== CÂMERA E GALERIA =========================== */
+
+.gallery-section {
+    padding: 15px;
+}
+
+.gallery-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.gallery-header h2 {
+    font-size: 1.3rem;
+    border-bottom: none;
+}
+
+.gallery-actions {
+    display: flex;
+    justify-content: flex-start;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.action-btn {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.9rem;
+}
+
+.primary-btn {
+    background-color: var(--primary-color);
+    color: var(--white);
+}
+
+.primary-btn:hover {
+    background-color: var(--secondary-color);
+}
+
+.download-btn {
+    background-color: var(--secondary-color);
+    color: var(--white);
+}
+
+.download-btn:hover {
+    background-color: var(--primary-color);
+}
+
+.download-btn:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+/* Lista de Fotos (Galeria) */
+.photo-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
+}
+
+.photo-item {
+    position: relative;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: 0 2px 5px var(--shadow);
+}
+
+.photo-item img {
+    width: 100%;
+    height: auto;
+    display: block;
+    aspect-ratio: 4/3; /* Proporção da imagem */
+    object-fit: cover;
+}
+
+.photo-actions {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-around;
+    padding: 5px;
+    background-color: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.photo-item:hover .photo-actions {
+    opacity: 1;
+}
+
+.action-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.action-btn i {
+    pointer-events: none; /* Permite que o clique vá para o botão pai */
+}
+
+.delete-single {
+    color: #ff4d4d;
+}
+
+/* =========================== CÂMERA EM TELA CHEIA =========================== */
+
+.fullscreen-camera-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #000;
+    z-index: 200;
+    display: none;
+}
+
+.fullscreen-camera-container.active {
+    display: block;
+}
+
+.camera-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.camera-container {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#video {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    min-height: 100%;
+}
+
+.controls {
+    position: absolute;
+    bottom: 30px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 50px;
+}
+
+.btn-circle {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background-color: var(--white);
+    border: 5px solid var(--primary-color);
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    transition: background-color 0.2s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.btn-circle:hover {
+    background-color: var(--bg-light);
+}
+
+.controls #switch-btn {
+    background-color: var(--primary-color);
+    color: var(--white);
+    width: 50px;
+    height: 50px;
+    border: 3px solid var(--white);
+    font-size: 1.2rem;
+}
+
+.controls #switch-btn:hover {
+    background-color: var(--secondary-color);
+}
+
+#back-to-gallery-btn {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    background: rgba(0, 0, 0, 0.5);
+    color: var(--white);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 1.2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    z-index: 10;
+}
+
+#photo-count {
+    position: absolute;
+    top: 25px;
+    right: 25px;
+    background: rgba(0, 0, 0, 0.5);
+    color: var(--accent-color);
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-weight: bold;
+    font-size: 1rem;
+    z-index: 10;
+}
+
+/* Marca D'Água */
+.watermark {
+    position: absolute;
+    bottom: 110px; /* Acima dos controles */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 95%;
+    color: var(--white);
+    text-align: right;
+    font-size: 12px;
+    padding: 5px 10px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 5px;
+    font-weight: bold;
+    z-index: 10;
+}
+
+/* =========================== RODAPÉ E BOTÕES EXTRAS =========================== */
+
+footer {
+    text-align: center;
+    padding: 15px;
+    background-color: var(--text-dark);
+    color: var(--white);
+    font-size: 0.8rem;
+    margin-top: 20px;
+}
+
+.whatsapp-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #25d366; 
+    color: var(--white);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.8rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 90;
+    transition: transform 0.3s;
+}
+
+.whatsapp-btn:hover {
+    transform: scale(1.1);
+}
+
+.back-to-top {
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    background-color: var(--primary-color);
+    color: var(--white);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: none; /* Inicialmente escondido */
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2rem;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 90;
+    transition: opacity 0.3s;
+}
+
+.back-to-top:hover {
+    opacity: 0.8;
+}
+
+/* =========================== MEDIA QUERIES (Desktop) =========================== */
+
+@media (min-width: 900px) {
+
+    /* Cabeçalho */
+    header {
+        justify-content: space-around;
+        padding: 10px 0;
+        height: auto;
+    }
+
+    .logo-placeholder {
+        display: block;
+    }
+    
+    .logo-placeholder img {
+        max-width: 150px;
+    }
+
+    header h1 {
+        font-size: 2.5rem;
+        flex-grow: 0;
+        margin-right: 20px;
+    }
+
+    header p {
+        position: static;
+        transform: none;
+        margin: 0;
+        font-size: 1.2rem;
+    }
+
+    /* Esconde menu mobile e mostra a navegação horizontal */
+    .menu-toggle, .side-menu, .menu-overlay {
+        display: none !important; 
+    }
+
+    /* Nav horizontal reaparece */
+    nav {
+        display: flex; 
+        justify-content: center;
+        background-color: var(--primary-color);
+        box-shadow: 0 2px 4px var(--shadow);
+        position: fixed;
+        top: 80px; /* Abaixo do cabeçalho */
+        left: 0;
+        width: 100%;
+        z-index: 99;
+    }
+
+    nav a {
+        display: inline-block;
+        padding: 10px 20px;
+        margin: 0 5px;
+        font-size: 1rem;
+        color: var(--white);
+        transition: background-color 0.2s;
+    }
+    
+    nav a.active, nav a:hover {
+        background-color: var(--secondary-color);
+        border-radius: 4px;
+    }
+
+    /* Centraliza e aumenta o conteúdo principal */
+    body {
+        padding-top: 140px; /* Espaço para cabeçalho + nav desktop */
+    }
+
+    main {
+        max-width: 900px;
+        padding: 20px;
+        margin: 0 auto;
+    }
+
+    section {
+        padding: 30px;
+        margin: 20px auto;
+        max-width: 800px; 
+    }
+
+    /* Estilos do Input em Desktop */
+    .input-group {
+        max-width: 450px; 
+        margin: 0 auto 15px auto;
+    }
+
+    /* Câmera: Botões de Ação horizontal na galeria */
+    .photo-list {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+    
+    /* Câmera em tela cheia */
+    .fullscreen-camera-container.active {
+        width: 60%;
+        height: 80%;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        border-radius: var(--border-radius);
+        box-shadow: 0 0 30px rgba(0, 0, 0, 0.9);
+    }
+    
+    .camera-wrapper {
+        border-radius: var(--border-radius);
+    }
+}
