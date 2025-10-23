@@ -30,82 +30,74 @@ body {
     background-color: var(--bg-light);
     color: var(--text-dark);
     line-height: 1.6;
+    font-size: 14px; /* Mobile first */
 }
 
-/* ===================== HEADER E NAVEGAÇÃO ===================== */
-#cabecalho-principal {
-    background-color: var(--primary-color);
+/* ===================== MOBILE FIRST - LAYOUT GERAL (APP LOOK) ===================== */
+
+/* O Menu Horizontal é escondido no mobile e substituído pelo Hamburger/Side Menu */
+nav {
+    display: none; 
+}
+
+/* Header */
+header {
+    background: var(--gradient);
     color: var(--white);
-    padding: 15px 20px;
-    display: flex;
-    align-items: center;
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    box-shadow: 0 4px 6px var(--shadow);
+    text-align: center;
+    padding: 15px 0;
+    position: relative;
+    box-shadow: 0 2px 10px var(--shadow);
+}
+
+.logo-placeholder {
+    margin-bottom: 8px;
 }
 
 .logo-placeholder img {
-    height: 40px; /* Tamanho da logomarca no header */
-    margin-right: 15px;
+    max-width: 100px; 
+    height: auto;
+    border-radius: 50%;
 }
 
-#cabecalho-principal h1 {
-    font-size: 1.2rem;
+header h1 {
+    font-size: 1.8rem;
     margin: 0;
-    flex-grow: 1;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 }
 
-#cabecalho-principal p {
-    font-size: 0.9rem;
-    opacity: 0.8;
+header p {
+    font-size: 1rem;
+    margin-top: 5px;
+    opacity: 0.9;
 }
 
+/* Menu Hamburger (Toggle Button) */
 .menu-toggle {
+    display: block; 
+    position: absolute;
+    top: 25px;
+    left: 15px;
     background: none;
     border: none;
     color: var(--white);
     font-size: 1.5rem;
     cursor: pointer;
-    padding: 5px;
-    margin-right: 15px;
-}
-
-/* Navegação secundária (abaixo do header em algumas páginas) */
-nav {
-    display: none; /* Escondido no mobile, pois o Side Menu é o principal */
-}
-
-/* ===================== MENU LATERAL ===================== */
-.menu-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
     z-index: 100;
-    display: none;
-    transition: opacity 0.3s ease;
-    opacity: 0;
 }
 
-.menu-overlay.active {
-    display: block;
-    opacity: 1;
-}
-
+/* Menu Lateral (Side Menu - App Navigation) */
 .side-menu {
     position: fixed;
     top: 0;
-    left: -250px;
+    left: -250px; /* Inicialmente fora da tela */
     width: 250px;
     height: 100%;
-    background-color: var(--text-dark); /* Roxo escuro */
-    padding-top: 60px;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
+    background-color: var(--text-dark); /* Fundo escuro */
+    box-shadow: 4px 0 10px rgba(0, 0, 0, 0.5);
+    z-index: 99;
     transition: left 0.3s ease;
-    z-index: 200;
+    padding-top: 70px; /* Espaço para não colidir com a barra superior do mobile */
     display: flex;
     flex-direction: column;
 }
@@ -115,230 +107,409 @@ nav {
 }
 
 .side-menu a {
-    color: var(--white);
     padding: 15px 20px;
+    color: var(--bg-light);
     text-decoration: none;
-    font-size: 1.1rem;
-    transition: background-color 0.3s;
-}
-
-.side-menu a i {
-    margin-right: 10px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .side-menu a:hover, .side-menu a.active {
     background-color: var(--primary-color);
-    color: var(--accent-color);
+    color: var(--white);
+}
+
+.menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 98;
+    display: none;
+}
+.menu-overlay.active {
+    display: block;
 }
 
 
-/* ===================== LAYOUT PRINCIPAL E ELEMENTOS COMUNS ===================== */
-
+/* Main Content */
 main {
-    padding: 20px;
-    max-width: 800px;
+    max-width: 100%;
     margin: 0 auto;
 }
 
 section {
     background-color: var(--white);
-    padding: 25px;
-    margin-bottom: 20px;
-    border-radius: var(--border-radius);
-    box-shadow: 0 2px 10px var(--shadow);
-}
-
-section h2 {
-    color: var(--primary-color);
-    border-bottom: 2px solid var(--bg-light);
-    padding-bottom: 10px;
-    margin-bottom: 20px;
-    font-size: 1.5rem;
-}
-
-/* Grupos de Input */
-.input-group {
+    padding: 20px 15px;
     margin-bottom: 15px;
-}
-
-.input-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-    color: var(--text-dark);
-}
-
-.input-group select, 
-.input-group input[type="text"],
-.input-group input[type="number"] {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ccc;
+    margin-left: 15px;
+    margin-right: 15px;
     border-radius: var(--border-radius);
-    font-size: 1rem;
-    transition: border-color 0.3s;
-    background-color: #fff;
-    color: var(--text-dark);
+    box-shadow: 0 4px 10px var(--shadow);
+    text-align: center;
 }
-
-.input-group select:focus, 
-.input-group input:focus {
-    border-color: var(--secondary-color);
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
-}
-
-.input-group select:disabled {
-    background-color: #eee;
-    opacity: 0.7;
-    cursor: not-allowed;
-}
-
-/* Botões de Ação */
-.action-btn {
-    padding: 12px 20px;
-    border: none;
-    border-radius: var(--border-radius);
-    font-size: 1rem;
-    cursor: pointer;
-    font-weight: bold;
-    transition: var(--transition);
-    width: 100%; 
+ul{
+    text-align: left;
+    margin-left: 20px;
     margin-top: 10px;
+    list-style-type: none; /* Remove bullets */
 }
 
-.primary-btn {
-    background-color: var(--primary-color);
-    color: var(--white);
-}
-
-.primary-btn:hover:not(:disabled) {
-    background-color: var(--secondary-color);
-}
-
-.secondary-btn {
-    background-color: var(--bg-light);
+ul li::before {
+    content: "•";
     color: var(--primary-color);
-    border: 1px solid var(--primary-color);
-}
-
-.secondary-btn:hover:not(:disabled) {
-    background-color: var(--tertiary-color);
-}
-
-.action-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.action-btn i {
-    margin-right: 5px;
-}
-
-
-/* Floating Buttons (WhatsApp e Voltar ao Topo) */
-.whatsapp-btn, .back-to-top {
-    position: fixed;
-    right: 20px;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background-color: #25D366; /* Cor do WhatsApp */
-    color: var(--white);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    box-shadow: 0 4px 8px var(--shadow);
-    z-index: 1000;
-    transition: transform 0.3s;
-}
-
-.whatsapp-btn:hover, .back-to-top:hover {
-    transform: scale(1.1);
-}
-
-.whatsapp-btn {
-    bottom: 20px;
-}
-
-.back-to-top {
-    bottom: 80px;
-    background-color: var(--secondary-color);
-    display: none;
-    opacity: 0;
-}
-
-.back-to-top.show {
-    display: flex;
-    opacity: 1;
+    font-weight: bold;
+    display: inline-block; 
+    width: 1em;
+    margin-left: -1em;
 }
 
 /* Footer */
 footer {
+    background-color: var(--text-dark);
+    color: var(--bg-light);
     text-align: center;
-    padding: 15px;
-    margin-top: 20px;
-    font-size: 0.85rem;
-    color: var(--text-dark);
-    border-top: 1px solid #ddd;
+    padding: 15px 0;
+    font-size: 0.8rem;
+}
+
+/* ===================== BOTÕES FLUTUANTES (Preservado) ===================== */
+.whatsapp-btn {
+    position: fixed;
+    bottom: 15px;
+    right: 15px;
+    background-color: #25d366;
+    color: white;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 100;
+    transition: transform 0.3s;
+    text-decoration: none;
+}
+
+.back-to-top {
+    position: fixed;
+    bottom: 75px;
+    right: 15px;
+    background: var(--primary-color);
+    color: var(--white);
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+    z-index: 99;
+}
+
+.back-to-top.show {
+    opacity: 1;
+    visibility: visible;
 }
 
 
-/* ===================== ESTILOS DA CÂMERA (COMUNS) ===================== */
-.camera-page main section {
-    max-width: none;
-    padding: 15px;
+/* ===================== ESTILOS PARA AS CAIXAS DE SELEÇÃO DA MARCA D'ÁGUA ===================== */
+
+.watermark-settings h2 {
+    color: var(--primary-color);
+    font-size: 1.2rem;
+    margin-bottom: 15px;
 }
 
-.camera-controls {
+.input-group {
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--bg-light);
-    margin-bottom: 20px;
+    align-items: flex-start; 
+    width: 100%;
+    max-width: 350px;
+    margin: 10px auto; 
+    text-align: left;
 }
 
-.controls-row {
+.input-group label {
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 8px;
     display: flex;
-    gap: 10px;
-}
-
-/* Ajusta o select-rede e select-loja para dividir a linha */
-.select-rede {
-    flex: 1;
-}
-.select-loja {
-    flex: 1;
-}
-
-/* Galeria de Fotos */
-.gallery-section h2 {
-    display: flex;
-    justify-content: space-between;
     align-items: center;
-}
-
-.photo-count-badge {
-    background-color: var(--primary-color);
-    color: var(--white);
-    padding: 5px 10px;
-    border-radius: 50px;
+    gap: 8px;
     font-size: 0.9rem;
 }
 
-.photo-actions {
+/* Estilo Base para as Caixas de Seleção */
+.input-group select {
+    appearance: none; 
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid var(--tertiary-color);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    color: var(--text-dark);
+    background-color: var(--white);
+    /* Seta customizada com a cor primária */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='%235d3fd3' d='M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z'/%3E%3C/svg%3E"); 
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 16px;
+    outline: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    cursor: pointer;
+}
+
+/* Foco e Hover */
+.input-group select:hover {
+    border-color: var(--secondary-color);
+}
+
+.input-group select:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(93, 63, 211, 0.2); /* Sombra suave com a cor primária */
+}
+
+/* Estilo para a opção desabilitada/selecionada */
+.input-group select option[disabled]:first-child {
+    color: #999;
+}
+
+
+/* ===================== BOTÃO DA CÂMERA (REVISADO) ===================== */
+
+.camera-button-area {
+    margin: 25px auto;
+    max-width: 350px;
+    text-align: center;
+}
+
+#open-camera-btn {
+    background: var(--gradient);
+    color: var(--white);
+    border: none;
+    padding: 15px 25px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: var(--transition);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    width: 100%;
     display: flex;
+    align-items: center;
+    justify-content: center;
     gap: 10px;
+}
+
+#open-camera-btn:hover:not(:disabled) {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    transform: translateY(-2px);
+}
+
+#open-camera-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* ===================== TELA CHEIA DA CÂMERA E GALERIA (Preservados) ===================== */
+
+.fullscreen-camera-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    z-index: 101;
+    display: none; /* Inicialmente escondido */
+    justify-content: center;
+    align-items: center;
+}
+
+.camera-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.camera-container {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: filter 0.1s ease;
+}
+
+#video.flash {
+    filter: brightness(1.5);
+}
+
+/* Controles */
+.controls {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 20px;
+    z-index: 10;
+}
+
+.btn-circle {
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    border: 3px solid var(--white);
+    background-color: rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+    outline: none;
+}
+
+#shutter-btn {
+    width: 75px;
+    height: 75px;
+    background-color: var(--white);
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    /* Adiciona um círculo interno para imitar um botão de captura */
+    position: relative;
+}
+
+#shutter-btn::after {
+    content: '';
+    position: absolute;
+    width: 80%;
+    height: 80%;
+    border-radius: 50%;
+    background-color: var(--white);
+    border: 3px solid var(--primary-color);
+}
+
+
+.watermark {
+    position: absolute;
+    top: auto;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--white);
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
+    font-size: 0.8rem;
+    font-weight: 500;
+    z-index: 10;
+    padding: 5px 10px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 5px;
+    max-width: 90%;
+    text-align: center;
+}
+
+#back-to-gallery-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(0, 0, 0, 0.5);
+    color: var(--white);
+    border: none;
+    padding: 10px 15px;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    cursor: pointer;
+    z-index: 10;
+}
+
+#photo-count {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    background: var(--primary-color);
+    color: var(--white);
+    padding: 5px 12px;
+    border-radius: 50%;
+    font-weight: 700;
+    font-size: 1rem;
+    z-index: 10;
+}
+
+
+/* Galeria */
+.gallery-section {
+    text-align: center;
+    padding-top: 5px;
+}
+
+.gallery-section h2 {
+    color: var(--primary-color);
+    font-size: 1.5rem;
     margin-bottom: 15px;
+    padding-top: 10px;
+}
+
+.action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.action-btn {
+    background: var(--primary-color);
+    color: var(--white);
+    border: none;
+    padding: 10px 15px;
+    border-radius: 50px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.action-btn:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.action-btn:hover:not(:disabled) {
+    background: var(--secondary-color);
 }
 
 .photo-list {
     display: grid;
     grid-template-columns: repeat(2, 1fr); 
     gap: 10px;
-    padding-top: 10px;
+    padding: 0 5px;
 }
 
 .photo-item {
@@ -350,314 +521,60 @@ footer {
 
 .photo-item img {
     width: 100%;
-    height: auto;
+    height: 100%;
+    object-fit: cover;
     display: block;
 }
 
-.delete-btn {
+.photo-item .delete-btn {
     position: absolute;
     top: 5px;
     right: 5px;
-    background-color: rgba(220, 53, 69, 0.8);
+    background-color: rgba(255, 0, 0, 0.7);
     color: var(--white);
     border: none;
-    border-radius: 50%;
     width: 30px;
     height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 0.9rem;
-}
-
-/* Estilos da Câmera em Tela Cheia */
-.fullscreen-camera-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: #000;
-    z-index: 10000;
-    display: none; /* Controlado pelo JavaScript */
-    justify-content: center;
-    align-items: center;
-}
-
-.camera-wrapper {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-}
-
-.camera-container {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.camera-container video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover; /* Garante que o vídeo preencha o container */
-}
-
-/* Efeito de Flash */
-.camera-container video.flash {
-    filter: brightness(1.5);
-}
-
-/* Marca d'água de Data/Hora e Dados */
-.watermark {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    color: var(--white);
-    background-color: rgba(0, 0, 0, 0.5);
-    padding: 5px 10px;
-    border-radius: 5px;
-    font-size: 0.8rem;
-    line-height: 1.2;
-    font-weight: bold;
-}
-
-/* Botões de controle da câmera */
-.controls {
-    position: absolute;
-    bottom: 20px;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    gap: 50px;
-}
-
-.btn-circle {
-    background-color: var(--primary-color);
-    color: var(--white);
-    border: 3px solid var(--white);
-    width: 70px;
-    height: 70px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
     cursor: pointer;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-    transition: background-color 0.3s;
+    font-size: 0.8rem;
+    z-index: 2;
+    transition: background-color 0.2s;
 }
 
-#shutter-btn {
-    background-color: var(--primary-color);
-    border: 5px solid var(--white);
-    width: 80px;
-    height: 80px;
+.photo-item .delete-btn:hover {
+    background-color: red;
 }
 
-#shutter-btn:hover {
-    background-color: var(--secondary-color);
-}
+/* ===================== MEDIA QUERIES (ADAPTAÇÃO PARA DESKTOP) ===================== */
 
-#switch-btn {
-    background-color: rgba(0, 0, 0, 0.5);
-    border: 1px solid var(--white);
-    width: 50px;
-    height: 50px;
-    font-size: 1.2rem;
-}
-#switch-btn:hover {
-    background-color: rgba(0, 0, 0, 0.7);
-}
-
-#back-to-gallery-btn {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background-color: rgba(0, 0, 0, 0.5);
-    color: var(--white);
-    border: none;
-    padding: 10px;
-    border-radius: var(--border-radius);
-    z-index: 10001;
-    cursor: pointer;
-}
-
-#photo-count {
-    position: absolute;
-    bottom: 30px;
-    right: 30px;
-    background-color: var(--accent-color);
-    color: var(--text-dark);
-    padding: 8px 12px;
-    border-radius: var(--border-radius);
-    font-weight: bold;
-    z-index: 10001;
-}
-
-/* ===================== ESTILOS DA CALCULADORA CD (NOVO) ===================== */
-
-.calculator-section {
-    padding: 20px;
-    margin-bottom: 20px;
-    border-radius: var(--border-radius);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-}
-
-.target-input-box {
-    background-color: var(--tertiary-color);
-    color: var(--text-dark);
-}
-
-.target-input-box h2 {
-    color: var(--text-dark);
-    border-bottom-color: var(--primary-color);
-}
-
-.summary-info {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    padding-top: 10px;
-}
-
-.summary-info p {
-    background-color: var(--bg-light);
-    padding: 10px;
-    border-radius: 5px;
-    border-left: 5px solid var(--secondary-color);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 1.1rem;
-}
-
-.summary-info strong {
-    font-weight: 600;
-}
-
-.summary-value {
-    color: var(--primary-color);
-    font-weight: bold;
-}
-
-.remaining-info p {
-    border-left-color: #dc3545; /* Vermelho para o que falta */
-}
-
-.remaining-info .missing-value {
-    color: #dc3545; /* Vermelho */
-    font-weight: bold;
-    font-size: 1.2rem;
-}
-
-.discharge-input-box .controls-row {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-/* === ESTILOS PARA AUMENTAR INPUTS DE DESCARREGAMENTO (SOLICITADO) === */
-.discharge-input-box input[type="number"],
-.discharge-input-box input[type="text"] {
-    /* Aumenta a altura da caixa */
-    padding: 15px; 
-    /* Aumenta o tamanho da fonte */
-    font-size: 1.2rem; 
-    /* Garante altura mínima para inputs */
-    min-height: 50px; 
-}
-
-/* Ajusta o botão "Adicionar Registro" para ter altura consistente */
-.discharge-input-box .action-btn {
-    padding: 15px 20px; /* Aumenta o padding do botão */
-    font-size: 1.1rem; /* Aumenta um pouco a fonte do botão */
-    min-height: 50px; /* Garante que o botão tenha a mesma altura dos inputs */
-}
-
-/* Tabela de Descarregamento */
-.discharge-summary-box {
-    padding: 25px;
-}
-
-.discharge-summary-box h2 {
-    margin-bottom: 15px;
-}
-
-.discharge-table-container {
-    overflow-x: auto;
-}
-
-#discharge-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
-    font-size: 0.95rem;
-}
-
-#discharge-table thead {
-    background-color: var(--primary-color);
-    color: var(--white);
-}
-
-#discharge-table th, #discharge-table td {
-    padding: 12px;
-    text-align: right;
-    border: 1px solid #ddd;
-}
-
-#discharge-table th:first-child, #discharge-table td:first-child {
-    text-align: center;
-}
-
-#discharge-table tbody tr:nth-child(even) {
-    background-color: var(--bg-light);
-}
-
-#discharge-table tbody tr:hover {
-    background-color: var(--tertiary-color);
-}
-
-.no-data-row td {
-    text-align: center !important;
-    font-style: italic;
-    color: #888;
-    background-color: #f9f9f9;
-}
-
-.report-buttons {
-    display: flex;
-    gap: 10px;
-    margin-top: 20px;
-}
-
-.report-buttons .action-btn {
-    flex: 1;
-}
-
-/* Estilos de Desktop */
 @media (min-width: 768px) {
-    #cabecalho-principal {
-        justify-content: space-between;
-        padding: 15px 40px;
+    
+    /* Esconde o menu hamburger no desktop e mostra a navegação horizontal */
+    .menu-toggle, .side-menu, .menu-overlay {
+        display: none !important; 
     }
 
-    .menu-toggle {
-        display: none;
+    header {
+        padding: 20px 0;
     }
 
-    .side-menu {
-        display: none;
+    .logo-placeholder img {
+        max-width: 150px;
+    }
+
+    header h1 {
+        font-size: 2.5rem;
+    }
+
+    header p {
+        font-size: 1.2rem;
     }
     
-    .menu-overlay {
-        display: none !important;
-    }
-
-    /* Navegação horizontal para desktop */
+    /* Nav horizontal reaparece */
     nav {
         display: flex; 
         justify-content: center;
@@ -703,42 +620,21 @@ footer {
     .photo-list {
         grid-template-columns: repeat(4, 1fr); /* 4 colunas em desktop */
     }
-
-    /* Layout da Calculadora em Desktop */
-    .summary-info {
-        flex-direction: row; /* Volta para a linha */
-        flex-wrap: wrap;
-        justify-content: space-between;
-    }
-    
-    .summary-info p {
-        flex: 1 1 48%; /* Duas colunas */
-        min-width: 250px;
-    }
-
-    .discharge-input-box .controls-row {
-        flex-direction: row;
-        align-items: flex-end; /* Alinha os inputs e o botão */
-    }
-    
-    .discharge-input-box .input-group {
-        flex: 1;
-    }
-    
-    /* Ajuste específico para desktop: garante que os elementos de descarregamento fiquem alinhados */
-    .discharge-input-box input[type="number"],
-    .discharge-input-box input[type="text"],
-    .discharge-input-box .action-btn {
-        height: 50px; 
-    }
-    
-    .discharge-input-box .action-btn {
-        width: auto; 
-        margin-top: 0;
-        min-width: 120px;
-    }
 }
 /* Adicionar em style.css para consistência visual */
 .input-group input[type="text"] {
     width: 100%;
+    padding: 12px 15px;
+    border: 2px solid var(--tertiary-color);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    color: var(--text-dark);
+    background-color: var(--white);
+    outline: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.input-group input[type="text"]:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(93, 63, 211, 0.2);
 }
