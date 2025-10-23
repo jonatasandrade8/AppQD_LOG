@@ -675,3 +675,288 @@ document.addEventListener('DOMContentLoaded', () => {
     loadAndPopulateDropdowns();
     updatePhotoGallery();
 });
+
+
+// ==================== FUNCIONALIDADES DA CALCULADORA CD (Nordestão) ====================
+
+// Constantes de Estimativa (Baseado em uma média de palete/carga)
+const KG_POR_PALETE_ESTIMADO = 400; // KG
+const KG_POR_CAIXA_ESTIMADO = 16; // KG
+const CAIXAS_POR_PALETE_ESTIMADO = KG_POR_PALETE_ESTIMADO / KG_POR_CAIXA_ESTIMADO; // 25
+
+// Estado da Calculadora
+let totalKgNota = 0;
+let dischargedList = [];
+
+// Elementos da Interface
+const inputTotalKg = document.getElementById('input-total-kg');
+const calculateTargetsBtn = document.getElementById('calculate-targets-btn');
+const targetSummarySection = document.getElementById('target-summary-section');
+const dischargeInputSection = document.getElementById('discharge-input-section');
+const dischargeSummarySection = document.getElementById('discharge-summary-section');
+const remainingSummarySection = document.getElementById('remaining-summary-section');
+const dischargeListTable = document.getElementById('discharge-list');
+const inputDischargeKg = document.getElementById('input-discharge-kg');
+const inputDischargeCaixas = document.getElementById('input-discharge-caixas');
+const addDischargeBtn = document.getElementById('add-discharge-btn');
+const downloadReportBtn = document.getElementById('download-report-btn');
+
+
+// -----------------------------------------------------
+// 1. Lógica de Cálculo
+// -----------------------------------------------------
+
+/**
+ * @description Calcula as metas iniciais e exibe as seções de controle.
+ * @param {string | number} totalKg - O volume total da nota fiscal em KG.
+ */
+let calculateTargets = (totalKg) => {
+    totalKgNota = parseFloat(totalKg) || 0;
+    
+    const totalPaletesEstimados = totalKgNota / KG_POR_PALETE_ESTIMADO;
+    const totalCaixasEstimadas = totalKgNota / KG_POR_CAIXA_ESTIMADO;
+
+    document.getElementById('target-kg-per-pallet').textContent = KG_POR_PALETE_ESTIMADO.toFixed(2);
+    document.getElementById('target-total-caixas').textContent = Math.round(totalCaixasEstimadas);
+    document.getElementById('target-total-paletes').textContent = totalPaletesEstimados.toFixed(2);
+
+    // Limpa e exibe as seções
+    dischargedList = [];
+    updateDischargeSummary(); 
+    
+    if (targetSummarySection) targetSummarySection.style.display = 'block';
+    if (dischargeInputSection) dischargeInputSection.style.display = 'block';
+    if (dischargeSummarySection) dischargeSummarySection.style.display = 'block';
+    if (remainingSummarySection) remainingSummarySection.style.display = 'block';
+    
+    // Habilita/Desabilita inputs
+    if (inputTotalKg) inputTotalKg.disabled = true;
+    if (calculateTargetsBtn) calculateTargetsBtn.style.display = 'none'; // Esconde o botão após o cálculo
+    if (document.getElementById('reset-calculator-btn')) document.getElementById('reset-calculator-btn').style.display = 'block'; // Mostra o botão de reset
+    
+    // Foca no primeiro input de descarregamento
+    if (inputDischargeKg) inputDischargeKg.focus();
+}
+
+/**
+ * @description Atualiza os totais descarregados e o restante.
+ */
+function updateDischargeSummary() {
+    const totalDischargedKg = dischargedList.reduce((sum, item) => sum + item.kg, 0);
+    const totalDischargedCaixas = dischargedList.reduce((sum, item) => sum + item.caixas, 0);
+
+    if (document.getElementById('total-discharged-kg')) document.getElementById('total-discharged-kg').textContent = totalDischargedKg.toFixed(2);
+    if (document.getElementById('total-discharged-caixas')) document.getElementById('total-discharged-caixas').textContent = totalDischargedCaixas;
+    
+    // Lógica do Restante
+    const remainingKg = totalKgNota - totalDischargedKg;
+    const remainingCaixas = (totalKgNota / KG_POR_CAIXA_ESTIMADO) - totalDischargedCaixas;
+    const remainingPaletes = remainingKg / KG_POR_PALETE_ESTIMADO;
+
+    if (document.getElementById('remaining-kg')) document.getElementById('remaining-kg').textContent = remainingKg.toFixed(2);
+    if (document.getElementById('remaining-caixas')) document.getElementById('remaining-caixas').textContent = Math.round(remainingCaixas);
+    if (document.getElementById('remaining-paletes')) document.getElementById('remaining-paletes').textContent = remainingPaletes.toFixed(2);
+    
+    // Atualiza a tabela
+    if (dischargeListTable) {
+        dischargeListTable.innerHTML = '';
+        dischargedList.forEach((item, index) => {
+            const row = dischargeListTable.insertRow();
+            row.insertCell().textContent = `#${index + 1}`;
+            row.insertCell().textContent = item.kg.toFixed(2);
+            row.insertCell().textContent = item.caixas;
+        });
+    }
+    
+    // Atualiza o estado do botão de download
+    if (downloadReportBtn) {
+        downloadReportBtn.disabled = dischargedList.length === 0;
+    }
+}
+
+/**
+ * @description Adiciona um novo item de descarregamento à lista.
+ */
+function addDischargeEntry() {
+    const kg = parseFloat(inputDischargeKg.value);
+    const caixas = parseInt(inputDischargeCaixas.value);
+
+    if (isNaN(kg) || kg <= 0) {
+        alert("Por favor, insira um valor válido para KG Conferidos.");
+        if (inputDischargeKg) inputDischargeKg.focus();
+        return;
+    }
+    if (isNaN(caixas) || caixas <= 0) {
+        alert("Por favor, insira um valor válido para Caixas Conferidas.");
+        if (inputDischargeCaixas) inputDischargeCaixas.focus();
+        return;
+    }
+
+    dischargedList.push({ kg: kg, caixas: caixas });
+    
+    // Limpa os inputs
+    if (inputDischargeKg) inputDischargeKg.value = '';
+    if (inputDischargeCaixas) inputDischargeCaixas.value = '';
+    if (inputDischargeKg) inputDischargeKg.focus();
+
+    updateDischargeSummary();
+}
+
+
+// -----------------------------------------------------
+// 2. Lógica de Exportação (Download)
+// -----------------------------------------------------
+
+/**
+ * @description Gera o conteúdo de texto para o relatório de descarregamento.
+ * @returns {string} O texto completo do relatório.
+ */
+function generateReportText() {
+    const totalDischargedKg = dischargedList.reduce((sum, item) => sum + item.kg, 0);
+    const totalDischargedCaixas = dischargedList.reduce((sum, item) => sum + item.caixas, 0);
+    const totalPaletesEstimados = totalKgNota / KG_POR_PALETE_ESTIMADO;
+
+    const remainingKg = totalKgNota - totalDischargedKg;
+    const remainingCaixas = (totalKgNota / KG_POR_CAIXA_ESTIMADO) - totalDischargedCaixas;
+    const remainingPaletes = remainingKg / KG_POR_PALETE_ESTIMADO;
+    
+    const date = new Date().toLocaleString('pt-BR');
+
+    let report = `RELATÓRIO DE DESCARREGAMENTO - CD NORDESTÃO\n`;
+    report += `QDELÍCIA FRUTAS - Gerado em: ${date}\n`;
+    report += '==================================================\n\n';
+    
+    report += '1. DADOS DA NOTA FISCAL\n';
+    report += `Volume Total da Nota: ${totalKgNota.toFixed(2)} KG\n\n`;
+    
+    report += '2. METAS DE DESCARREGO (ESTIMATIVA)\n';
+    report += `KG Médio/Palete (Estimado): ${KG_POR_PALETE_ESTIMADO.toFixed(2)} KG\n`;
+    report += `Total de Caixas (Estimado): ${Math.round(totalKgNota / KG_POR_CAIXA_ESTIMADO)} caixas\n`;
+    report += `Total de Paletes (Estimado): ${totalPaletesEstimados.toFixed(2)} paletes\n\n`;
+
+    report += '3. DETALHE DO DESCARREGAMENTO (REGISTRO POR PALETE)\n';
+    report += '--------------------------------------------------\n';
+    report += 'Palete # | KG Conferidos | Caixas Conferidas\n';
+    report += '--------------------------------------------------\n';
+    dischargedList.forEach((item, index) => {
+        report += `#${index + 1} | ${item.kg.toFixed(2)} | ${item.caixas}\n`;
+    });
+    report += '--------------------------------------------------\n\n';
+
+    report += '4. RESUMO GERAL\n';
+    report += `TOTAL KG Descarregado: ${totalDischargedKg.toFixed(2)} KG\n`;
+    report += `TOTAL Caixas Descarregadas: ${totalDischargedCaixas} caixas\n\n`;
+    
+    report += '5. FALTA PARA CONCLUIR\n';
+    report += `KG Restantes: ${remainingKg.toFixed(2)} KG\n`;
+    report += `Caixas Restantes: ${Math.round(remainingCaixas)} caixas\n`;
+    report += `Paletes Restantes: ${remainingPaletes.toFixed(2)} paletes\n`;
+    report += '==================================================\n';
+
+    return report;
+}
+
+/**
+ * @description Inicia o download do relatório em formato TXT.
+ */
+function downloadReport() {
+    if (dischargedList.length === 0) {
+        alert("Não há registros de descarregamento para gerar o relatório.");
+        return;
+    }
+    const reportText = generateReportText();
+    const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const filename = `Relatorio_CD_Nordestao_${date}.txt`;
+    
+    const blob = new Blob([reportText], { type: 'text/plain;charset=utf-8' });
+    
+    // Cria um link de download temporário
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    
+    // Simula o clique e remove o link
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
+    // Revoga o URL do objeto para liberar memória
+    URL.revokeObjectURL(a.href);
+}
+
+
+// -----------------------------------------------------
+// 3. EVENT LISTENERS e Inicialização da Calculadora
+// -----------------------------------------------------
+
+const targetInputSection = document.getElementById('target-input-section');
+
+if (inputTotalKg && calculateTargetsBtn) {
+    // Habilita o botão apenas se o input tiver um valor válido
+    inputTotalKg.addEventListener('input', () => {
+        const kg = parseFloat(inputTotalKg.value);
+        if (calculateTargetsBtn) calculateTargetsBtn.disabled = isNaN(kg) || kg <= 0;
+    });
+
+    calculateTargetsBtn.addEventListener('click', () => {
+        calculateTargets(inputTotalKg.value);
+    });
+}
+
+if (addDischargeBtn) {
+    addDischargeBtn.addEventListener('click', addDischargeEntry);
+    
+    // Permite adicionar ao pressionar Enter em qualquer um dos campos de descarregamento
+    if (inputDischargeKg) inputDischargeKg.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault(); 
+            addDischargeEntry();
+        }
+    });
+    if (inputDischargeCaixas) inputDischargeCaixas.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addDischargeEntry();
+        }
+    });
+}
+
+if (downloadReportBtn) {
+    downloadReportBtn.addEventListener('click', downloadReport);
+}
+
+// Lógica para o botão de Reiniciar (Adicionado dinamicamente)
+if(targetInputSection) {
+    const resetButton = document.createElement('button');
+    resetButton.textContent = 'Reiniciar Calculadora';
+    resetButton.classList.add('action-btn', 'secondary-btn');
+    resetButton.style.marginTop = '10px';
+    resetButton.style.display = 'none'; // Inicialmente escondido
+    resetButton.id = 'reset-calculator-btn';
+    
+    resetButton.addEventListener('click', () => {
+        // Reinicia o estado
+        totalKgNota = 0;
+        dischargedList = [];
+        
+        // Reabilita o input e botão inicial
+        if (inputTotalKg) {
+            inputTotalKg.disabled = false;
+            inputTotalKg.value = '';
+            inputTotalKg.focus();
+        }
+        if (calculateTargetsBtn) {
+            calculateTargetsBtn.style.display = 'block';
+            calculateTargetsBtn.disabled = true;
+        }
+
+        // Esconde todas as seções de resumo
+        if (targetSummarySection) targetSummarySection.style.display = 'none';
+        if (dischargeInputSection) dischargeInputSection.style.display = 'none';
+        if (dischargeSummarySection) dischargeSummarySection.style.display = 'none';
+        if (remainingSummarySection) remainingSummarySection.style.display = 'none';
+        resetButton.style.display = 'none';
+    });
+
+    targetInputSection.appendChild(resetButton);
+}
