@@ -795,10 +795,20 @@ function updateDischargeSummary() {
 	            const pesoMedioCaixa = item.kg / item.caixas;
 	            
 	            const row = dischargeListTable.insertRow();
+	            const actionCell = row.insertCell();
+	            const deleteBtn = document.createElement('button');
+	            deleteBtn.classList.add('delete-pallet-btn');
+	            deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+	            deleteBtn.onclick = () => {
+	                // Remove o item da lista e atualiza a tabela
+	                dischargedList.splice(index, 1);
+	                updateDischargeSummary();
+	            };
+	            actionCell.appendChild(deleteBtn);
 	            row.insertCell().textContent = `#${index + 1}`;
 	            row.insertCell().textContent = item.kg.toFixed(2);
 	            row.insertCell().textContent = item.caixas;
-	            row.insertCell().textContent = pesoMedioCaixa.toFixed(2); // Nova Coluna
+	            row.insertCell().textContent = pesoMedioCaixa.toFixed(2);
 	        });
 	    }
     
@@ -884,14 +894,14 @@ function generateReportText() {
     report += `Total de Paletes (Estimado): ${totalPaletesEstimados} paletes\n\n`;
 
 	    report += '3. DETALHE DO DESCARREGAMENTO (REGISTRO POR PALETE)\n';
-	    report += '------------------------------------------------------------------\n';
-	    report += 'Palete # | KG Conferidos | Caixas Conferidas | Peso Médio/Caixa\n';
-	    report += '------------------------------------------------------------------\n';
+	    report += '==================================================================\n';
+	    report += '|| Palete # || KG Conferidos || Caixas Conferidas || Peso Médio/Caixa ||\n';
+	    report += '==================================================================\n';
 	    dischargedList.forEach((item, index) => {
 	        const pesoMedioCaixa = item.kg / item.caixas;
-	        report += `#${index + 1} | ${item.kg.toFixed(2)} | ${item.caixas} | ${pesoMedioCaixa.toFixed(2)}\n`;
+	        report += `|| #${index + 1} || ${item.kg.toFixed(2)} || ${item.caixas} || ${pesoMedioCaixa.toFixed(2)} ||\n`;
 	    });
-	    report += '------------------------------------------------------------------\n\n';
+	    report += '==================================================================\n\n';
 
     report += '4. RESUMO GERAL\n';
     report += `TOTAL KG Descarregado: ${totalDischargedKg.toFixed(2)} KG\n`;
