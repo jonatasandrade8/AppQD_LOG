@@ -638,3 +638,151 @@ footer {
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(93, 63, 211, 0.2);
 }
+/* ===================== ESTILOS ESPECÍFICOS DA CALCULADORA CD ===================== */
+
+/* Contêiner principal da calculadora */
+.calculator-section {
+    background-color: var(--white);
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 10px var(--shadow);
+    margin-bottom: 20px;
+}
+
+/* Estilo para títulos de seção dentro da calculadora */
+.calculator-section h2 {
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--bg-light);
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+}
+
+/* Garante que todos os inputs de texto e número sigam o padrão */
+.input-group input[type="text"],
+.input-group input[type="number"] {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid var(--tertiary-color);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    color: var(--text-dark);
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.input-group input[type="text"]:focus,
+.input-group input[type="number"]:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(93, 63, 211, 0.2); /* Sombra suave roxa */
+    outline: none;
+}
+
+/* Ajuste para o espaçamento dos grupos de input */
+.input-group {
+    margin-bottom: 15px;
+}
+
+/* Estilo para botões de ação e secundários (Reutilizando a padronização de botões) */
+.action-btn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    margin-top: 20px;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.primary-btn {
+    background: var(--gradient);
+    color: var(--white);
+}
+
+.primary-btn:hover:not(:disabled) {
+    box-shadow: 0 5px 15px rgba(93, 63, 211, 0.4);
+    opacity: 0.9;
+}
+
+.secondary-btn {
+    background-color: var(--tertiary-color);
+    color: var(--text-dark);
+    border: 1px solid var(--secondary-color);
+}
+
+.secondary-btn:hover:not(:disabled) {
+    background-color: var(--secondary-color);
+    color: var(--white);
+}
+
+.action-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Estilos de Tabela para o Resumo de Descarregamento */
+.discharge-summary-section table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 0.9rem;
+}
+
+.discharge-summary-section th, .discharge-summary-section td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--bg-light);
+}
+
+.discharge-summary-section th {
+    background-color: var(--primary-color);
+    color: var(--white);
+    font-weight: 600;
+}
+
+.discharge-summary-section tbody tr:nth-child(even) {
+    background-color: var(--bg-light);
+}
+
+.discharge-summary-section tbody tr:hover {
+    background-color: var(--tertiary-color);
+    cursor: default;
+}
+
+/* Estilos para as caixas de resumo (Meta, Descarregado, Restante) */
+.summary-info {
+    padding: 15px;
+    border-radius: var(--border-radius);
+    background-color: var(--bg-light);
+}
+
+.summary-info p {
+    margin-bottom: 8px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--text-dark);
+}
+
+.summary-info strong {
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+/* Cores de destaque para valores */
+.target-value {
+    color: var(--primary-color); /* Roxo */
+    font-weight: 700;
+}
+
+.discharged-value {
+    color: #008000; /* Verde escuro */
+    font-weight: 700;
+}
+
+.missing-value {
+    color: #cc0000; /* Vermelho escuro */
+    font-weight: 700;
+}
