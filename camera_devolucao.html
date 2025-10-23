@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Página de Câmera para Registro de Fotos Gerais - Logística Qdelícia">
-    <title>Registro Geral - Logística Qdelícia</title>
+    <meta name="description" content="Página de Câmera para Registro de Fotos de Devolução e Ocorrência - Logística Qdelícia">
+    <title>Registro Devolução - Logística Qdelícia</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="./style.css"> 
 </head>
@@ -14,8 +14,8 @@
     <aside class="side-menu">
         <a href="index.html"><i class="fas fa-home"></i> Início</a>
         <a href="faltas_devolucoes.html"><i class="fas fa-receipt"></i> Faltas/Devoluções</a>
-        <a href="camera_geral.html" class="active"><i class="fas fa-camera"></i> Reg. Geral</a>
-        <a href="camera_devolucao.html"><i class="fas fa-ban"></i> Reg. Devolução</a>
+        <a href="camera_geral.html"><i class="fas fa-camera"></i> Reg. Geral</a>
+        <a href="camera_devolucao.html" class="active"><i class="fas fa-ban"></i> Reg. Devolução</a>
         <a href="aplicacao_futura.html"><i class="fas fa-gears"></i> Aplicação Futura</a>
         <a href="dashboard.html"><i class="fas fa-chart-bar"></i> Relatórios</a>
     </aside>
@@ -28,14 +28,14 @@
             <img src="./images/logo-qdelicia.png" alt="Logomarca Qdelícia Frutas"> 
         </div>
         <h1>Qdelícia Frutas</h1>
-        <p>Câmera para Registros Gerais (Carga/Descarga)</p>
+        <p>Câmera para Registros de Devolução/Ocorrência</p>
     </header>
     
     <nav>
         <a href="index.html">Início</a>
         <a href="faltas_devolucoes.html">Faltas/Devoluções</a>
-        <a href="camera_geral.html" class="active">Reg. Geral</a>
-        <a href="camera_devolucao.html">Reg. Devolução</a>
+        <a href="camera_geral.html">Reg. Geral</a>
+        <a href="camera_devolucao.html" class="active">Reg. Devolução</a>
         <a href="aplicacao_futura.html">Aplicação Futura</a>
         <a href="dashboard.html">Relatórios</a>
     </nav>
@@ -43,19 +43,12 @@
     <main class="camera-main-content">
         
         <section class="watermark-settings">
-            <h2>Informações do Registro Geral</h2>
+            <h2>Informações da Devolução/Ocorrência</h2>
             
             <div class="input-group">
                 <label for="select-entregador"><i class="fas fa-id-card"></i> Entregador</label>
                 <select id="select-entregador" required>
                     <option value="" disabled selected>Selecione o Entregador</option>
-                </select>
-            </div>
-
-            <div class="input-group">
-                <label for="select-status"><i class="fas fa-truck-fast"></i> Status da Operação</label>
-                <select id="select-status" required>
-                    <option value="" disabled selected>Selecione o Status</option>
                 </select>
             </div>
             
@@ -71,6 +64,26 @@
                 <select id="select-loja" disabled required>
                     <option value="" disabled selected>Selecione a Loja/PDV</option>
                 </select>
+            </div>
+
+            <div class="input-group">
+                <label for="select-motivo"><i class="fas fa-triangle-exclamation"></i> Motivo da Devolução</label>
+                <select id="select-motivo" required>
+                    <option value="" disabled selected>Selecione o Motivo</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label for="select-produto"><i class="fas fa-seedling"></i> Tipo do Produto</label>
+                <select id="select-produto" required>
+                    <option value="" disabled selected>Selecione o Produto</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label for="input-quantidade"><i class="fas fa-weight-hanging"></i> Quantidade (KG / Caixas)</label>
+                <input type="text" id="input-quantidade" placeholder="Ex: 25 kg, 3 caixas, 1/2 palete..." required 
+                       style="width: 100%; padding: 12px 15px; border: 2px solid var(--tertiary-color); border-radius: var(--border-radius); font-size: 1rem; color: var(--text-dark); background-color: var(--white); outline: none; transition: border-color 0.3s, box-shadow 0.3s;">
             </div>
             
             <div class="camera-button-area">
