@@ -43,9 +43,10 @@ const APP_DATA = {
         "Pacovan",
         "Comprida",
         "Leite",
-        "NAnica",
+        "Nanica",
         "Goiaba",
-        "Abacaxi"
+        "Abacaxi",
+        "TUDO"
     ],
     
     // QUANTIDADES_KG foi removido, substituído por um input de texto.
