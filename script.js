@@ -362,7 +362,7 @@ function drawWatermark(canvas, ctx) {
         const quantidade = inputQuantidade ? inputQuantidade.value.trim() : 'N/A';
         
         lines.push(`Motivo: ${motivo}`);
-        lines.push(`Produto: ${produto} | ⚖️ QTD: ${quantidade} KG/Caixas`);
+        lines.push(`Produto: ${produto} || QTD: ${quantidade} KG`);
     }
     
     // --- Desenho no Canvas ---
@@ -521,7 +521,7 @@ function updateDateTimeWatermark() {
             const quantidade = inputQuantidade ? inputQuantidade.value.trim() : 'N/A'; 
             
             watermarkContent += `<br>Motivo: ${motivo}`;
-            watermarkContent += `<br>Produto: ${produto} | ⚖️ QTD: ${quantidade} KG/Caixas`;
+            watermarkContent += `<br>Produto: ${produto} || QTD: ${quantidade} KG`;
         }
         
         dateTimeElement.innerHTML = watermarkContent;
