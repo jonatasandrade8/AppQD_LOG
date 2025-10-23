@@ -723,6 +723,42 @@ footer {
     cursor: not-allowed;
 }
 
+/* Estilos para o Grupo de Input Horizontal (KG e Caixas) */
+.input-group-horizontal {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.input-group-horizontal .input-field {
+    flex: 1; /* Distribui o espaço igualmente entre KG e Caixas */
+    text-align: left;
+}
+
+.input-group-horizontal .input-field label {
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+    display: block;
+    font-size: 0.9rem;
+}
+
+.input-group-horizontal .input-field input[type="number"] {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid var(--tertiary-color);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    color: var(--text-dark);
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.input-group-horizontal .input-field input[type="number"]:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(93, 63, 211, 0.2);
+    outline: none;
+}
+
 /* Estilos de Tabela para o Resumo de Descarregamento */
 .discharge-summary-section table {
     width: 100%;
