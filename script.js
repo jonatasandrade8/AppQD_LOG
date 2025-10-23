@@ -43,7 +43,7 @@ const APP_DATA = {
         "Pacovan",
         "Comprida",
         "Leite",
-        "Nanica",
+        "NAnica",
         "Goiaba",
         "Abacaxi"
     ],
@@ -371,30 +371,66 @@ function drawWatermark(canvas, ctx) {
     const baseFontSize = canvas.height / 50; 
     const lineHeight = baseFontSize * 1.3;
     const margin = canvas.width / 50;
+    const padding = baseFontSize * 0.5; // Padding para o fundo preto
 
-    // Estilo do texto
+    // Estilo do texto (Inicialmente para medir o texto)
     ctx.font = `600 ${baseFontSize}px Arial, sans-serif`; 
-    ctx.fillStyle = 'rgba(255, 255, 255, 1)'; 
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.9)'; 
-    ctx.lineWidth = 4; 
     ctx.textAlign = 'right';
 
-    // Posição para o texto (canto inferior direito, desenhando de baixo para cima)
-    const xText = canvas.width - margin;
-    let yText = canvas.height - margin;
+    // 1. Encontra a largura máxima do texto para calcular o fundo
+    let maxWidth = 0;
+    lines.forEach(line => {
+        const width = ctx.measureText(line).width;
+        if (width > maxWidth) {
+            maxWidth = width;
+        }
+    });
+
+    // 2. Calcula as dimensões e posição do fundo do texto
+    const rectWidth = maxWidth + 2 * padding;
+    const rectHeight = (lines.length * lineHeight) + padding;
+    
+    const xText = canvas.width - margin; // Borda direita do texto (sem padding interno)
+    const yBottomBaseline = canvas.height - margin; // Baseline da última linha (sem padding interno)
+    
+    // Posição superior esquerda do retângulo de fundo do texto
+    const xRect = xText - rectWidth;
+    const yRect = yBottomBaseline - rectHeight;
+
+    // 3. Desenha o fundo preto semi-transparente (Bloco de Texto)
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'; // Preto semi-transparente
+    ctx.fillRect(xRect, yRect, rectWidth, rectHeight);
+
+
+    // 4. Configura o estilo do texto e desenha cada linha
+    ctx.fillStyle = 'rgba(255, 255, 255, 1)'; // Branco para o texto
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.9)'; 
+    ctx.lineWidth = 2; // Contorno para maior legibilidade
+
+    // Posição inicial para o texto (baseline da última linha, ajustada pelo padding)
+    let yText = yBottomBaseline - padding; 
 
     // Desenha cada linha, invertendo a ordem para desenhar de baixo para cima
     lines.reverse().forEach(line => {
-        ctx.strokeText(line, xText, yText);
-        ctx.fillText(line, xText, yText);
+        ctx.strokeText(line, xText - padding, yText); // Desenha com padding da direita
+        ctx.fillText(line, xText - padding, yText);
         yText -= lineHeight; 
     });
 
-    // Logomarca (Canto Superior Esquerdo)
+
+    // 5. Logomarca (Canto Superior Esquerdo com fundo preto)
     const logoHeight = canvas.height / 8; 
     const logoWidth = (logoImage.width / logoImage.height) * logoHeight;
     const xLogo = margin;
-    const yLogo = margin; // <--- Posição superior esquerda
+    const yLogo = margin; // Posição superior esquerda
+
+    // Fundo da Logomarca
+    const logoBgPadding = baseFontSize * 0.5;
+    const logoBgWidth = logoWidth + 2 * logoBgPadding;
+    const logoBgHeight = logoHeight + 2 * logoBgPadding;
+    
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'; // Preto semi-transparente
+    ctx.fillRect(xLogo - logoBgPadding, yLogo - logoBgPadding, logoBgWidth, logoBgHeight);
 
     if (logoImage.complete && logoImage.naturalHeight !== 0) {
         ctx.drawImage(logoImage, xLogo, yLogo, logoWidth, logoHeight);
