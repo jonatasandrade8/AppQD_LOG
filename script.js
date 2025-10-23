@@ -2,12 +2,12 @@
 // ATENÇÃO: Os dados do entregador são separados da Rede/Loja, conforme solicitado.
 const APP_DATA = {
     // Entregadores (lista independente)
-    ENTREGADORES: [
-        "Entregador 1 (Motorista)",
-        "Entregador 2 (Ajudante)",
-        "Entregador 3 (Terceirizado)",
-        "Entregador 4 (Fixo)",
-        "Entregador 5 (Reserva)"
+    OPERAS: [
+        "José Luiz",
+        "Paulino",
+        "Antonio Ananias",
+        "Emanuel",
+        "Cleiton"
     ],
 
     // Status (NOVO para Registro Geral)
@@ -15,32 +15,37 @@ const APP_DATA = {
         "Chegada",
         "Saída",
         "Encostou",
-        "Descarregando"
+        "Descarregando",
+        "Aguardando"
     ],
     
     // Redes e Lojas (estrutura dependente)
     REDES_LOJAS: {
-        "Rede A (Atacado)": ["Loja 01", "Loja 02", "Loja 03"],
-        "Rede B (Varejo)": ["Loja X", "Loja Y"],
-        "Rede C (Mercado Local)": ["Ponto 1", "Ponto 2", "Ponto 3", "Ponto 4"],
+        "Atacadão": ["BR 101 - SUL", "Parnammirim", "Prudente", "Zona Norte"],
+        "Assaí": ["Ponta negra", "Maria Lacerda", "BR 101 - SUL", "Zona Norte"],
+        "Superfácil": ["Emaús", "Nazaré", "Olho dágua"],
+        "Nordestão": ["Loja 1", "Loja 2", "Loja 3", "Loja 4", "Loja 5", "Loja 6", "Loja 7", "Loja 8"],
+        "Carrefour": ["Sul", "Norte"],
+        "Mar Vermelho": ["Natal", "Parnamirim"],
     },
     
     // Dados Adicionais para a Câmera de Devolução
     MOTIVOS_DEVOLUCAO: [
-        "Avaria (Amassado/Rachado)",
+        "Maturação elevada",
         "Atraso na Entrega",
-        "Rejeição da Loja (Motivo Interno)",
-        "Qualidade (Fruto Verde/Podre)",
+        "Qualidade baixa",
+        "Peso alt.",
         "Outro Motivo"
     ],
     
     TIPOS_PRODUTO: [
         "Prata",
         "Pacovan",
-        "Maçã",
-        "Mamão",
-        "Melancia",
-        "Outro Fruto"
+        "Comprida",
+        "Leite",
+        "NAnica",
+        "Goiaba",
+        "Abacaxi"
     ],
     
     // QUANTIDADES_KG foi removido, substituído por um input de texto.
