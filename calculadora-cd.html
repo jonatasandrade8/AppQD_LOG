@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Calculadora para controle de descarregamento no Centro de Distribuição Nordestão.">
+    <title>Calculadora CD - Nordestão</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="./style.css"> 
+</head>
+<body>
+    
+    <div class="menu-overlay"></div>
+    <aside class="side-menu">
+        <a href="index.html">Início</a>
+        <a href="faltas_devolucoes.html">Faltas/Devoluções</a>
+        <a href="camera_geral.html">Reg. Geral</a>
+        <a href="camera_devolucao.html" >Reg. Devolução</a>
+        <a href="calculadora-cd.html"class="active">Calculadora CD</a>
+    </aside>
+
+    <header id="cabecalho-principal">
+        <button class="menu-toggle" aria-label="Abrir Menu">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="logo-placeholder">
+            <img src="./images/logo-qdelicia.png" alt="Logomarca Qdelícia Frutas"> 
+        </div>
+        <h1>Calculadora CD - Nordestão</h1>
+        <p>Controle de descarregamento por KG e Palete.</p>
+    </header>
+
+    <nav>
+        <a href="index.html">Início</a>
+        <a href="faltas_devolucoes.html">Faltas/Devoluções</a>
+        <a href="camera_geral.html">Reg. Geral</a>
+        <a href="camera_devolucao.html" >Reg. Devolução</a>
+        <a href="calculadora-cd.html"class="active">Calculadora CD</a>
+    </nav>
+
+    <main class="calculator-main">
+        <section id="target-input-section" class="calculator-section">
+            <h2>1. Dados da Nota Fiscal</h2>
+            <div class="input-group">
+                <label for="input-total-kg">Volume Total da Nota (KG)</label>
+                <input type="number" id="input-total-kg" placeholder="Ex: 5000" step="0.01" min="0">
+                
+                <button id="calculate-targets-btn" class="action-btn primary-btn" disabled>
+                    <i class="fas fa-calculator"></i> Calcular Metas
+                </button>
+            </div>
+        </section>
+
+        <section id="target-summary-section" class="calculator-section" style="display: none;">
+            <h2>2. Metas de Descarrego (Estimativa)</h2>
+            <div class="summary-info">
+                <p><strong>KG Médio/Palete:</strong> <span id="target-kg-per-pallet">0.00</span> kg</p>
+                <p><strong>Total de Caixas:</strong> <span id="target-total-caixas">0</span> caixas</p>
+                <p><strong>Total de Paletes:</strong> <span id="target-total-paletes">0.00</span> paletes</p>
+            </div>
+        </section>
+        
+        <section id="discharge-input-section" class="calculator-section" style="display: none;">
+            <h2>3. Registrar Descarregamento (Palete)</h2>
+            <div class="input-group-horizontal">
+                <div class="input-field">
+                    <label for="input-discharge-kg">KG Conferidos</label>
+                    <input type="number" id="input-discharge-kg" placeholder="Ex: 380.5" step="0.01" min="0">
+                </div>
+                <div class="input-field">
+                    <label for="input-discharge-caixas">Caixas Conferidas</label>
+                    <input type="number" id="input-discharge-caixas" placeholder="Ex: 25" step="1" min="1">
+                </div>
+            </div>
+            <button id="add-discharge-btn" class="action-btn secondary-btn">
+                <i class="fas fa-plus"></i> Adicionar Descarrego
+            </button>
+        </section>
+
+        <section id="discharge-summary-section" class="calculator-section" style="display: none;">
+            <h2>4. Descarregado até o momento</h2>
+            <div class="summary-info">
+                <p><strong>Total KG Descarregado:</strong> <span id="total-discharged-kg">0.00</span> kg</p>
+                <p><strong>Total Caixas Descarregadas:</strong> <span id="total-discharged-caixas">0</span> caixas</p>
+            </div>
+            <table class="discharge-table">
+                <thead>
+                    <tr>
+                        <th>Palete #</th>
+                        <th>KG</th>
+                        <th>Caixas</th>
+                    </tr>
+                </thead>
+                <tbody id="discharge-list">
+                    </tbody>
+            </table>
+            <div class="report-buttons">
+                <button id="share-report-btn" class="action-btn primary-btn"><i class="fas fa-share-alt"></i> Compartilhar Relatório</button>
+                <button id="download-report-btn" class="action-btn secondary-btn"><i class="fas fa-download"></i> Baixar Relatório</button>
+            </div>
+        </section>
+
+
+        <section id="remaining-summary-section" class="calculator-section remaining-summary-box" style="display: none;">
+            <h2>5. Falta para Concluir (Restante)</h2>
+            <div class="summary-info remaining-info">
+                <p><strong>KG Restantes:</strong> <span id="remaining-kg" class="missing-value">0.00</span> kg</p>
+                <p><strong>Caixas Restantes:</strong> <span id="remaining-caixas" class="missing-value">0</span> caixas</p>
+                <p><strong>Paletes Restantes:</strong> <span id="remaining-paletes" class="missing-value">0.00</span> paletes</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Qdelícia Frutas. Todos os direitos reservados.</p>
+    </footer>
+
+    <a href="https://wa.me/5581997250086" class="whatsapp-btn" target="_blank">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+    <div class="back-to-top">
+        <i class="fas fa-arrow-up"></i>
+    </div>
+
+    <script src="./script.js"></script>
+</body>
+</html>
