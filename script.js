@@ -676,13 +676,12 @@ document.addEventListener('DOMContentLoaded', () => {
     updatePhotoGallery();
 });
 
-
 // ==================== FUNCIONALIDADES DA CALCULADORA CD (Nordestão) ====================
 
-// Constantes de Estimativa (Baseado em uma média de palete/carga)
-const KG_POR_PALETE_ESTIMADO = 400; // KG
-const KG_POR_CAIXA_ESTIMADO = 16; // KG
-const CAIXAS_POR_PALETE_ESTIMADO = KG_POR_PALETE_ESTIMADO / KG_POR_CAIXA_ESTIMADO; // 25
+// Constantes de Estimativa (ATUALIZADO: KG_POR_CAIXA_ESTIMADO alterado para 15)
+const KG_POR_PALETE_ESTIMADO = 375; // KG
+const KG_POR_CAIXA_ESTIMADO = 15; // KG (Alterado de 16 para 15)
+const CAIXAS_POR_PALETE_ESTIMADO = KG_POR_PALETE_ESTIMADO / KG_POR_CAIXA_ESTIMADO; 
 
 // Estado da Calculadora
 let totalKgNota = 0;
@@ -718,7 +717,8 @@ let calculateTargets = (totalKg) => {
 
     document.getElementById('target-kg-per-pallet').textContent = KG_POR_PALETE_ESTIMADO.toFixed(2);
     document.getElementById('target-total-caixas').textContent = Math.round(totalCaixasEstimadas);
-    document.getElementById('target-total-paletes').textContent = totalPaletesEstimados.toFixed(2);
+    // ATUALIZADO: Arredondamento de Paletes para cima
+    document.getElementById('target-total-paletes').textContent = Math.ceil(totalPaletesEstimados); 
 
     // Limpa e exibe as seções
     dischargedList = [];
@@ -755,17 +755,34 @@ function updateDischargeSummary() {
 
     if (document.getElementById('remaining-kg')) document.getElementById('remaining-kg').textContent = remainingKg.toFixed(2);
     if (document.getElementById('remaining-caixas')) document.getElementById('remaining-caixas').textContent = Math.round(remainingCaixas);
-    if (document.getElementById('remaining-paletes')) document.getElementById('remaining-paletes').textContent = remainingPaletes.toFixed(2);
+    // ATUALIZADO: Arredondamento de Paletes para cima
+    if (document.getElementById('remaining-paletes')) document.getElementById('remaining-paletes').textContent = Math.ceil(remainingPaletes); 
     
     // Atualiza a tabela
     if (dischargeListTable) {
-        dischargeListTable.innerHTML = '';
+        // Remove a linha 'No-Data'
+        dischargeListTable.innerHTML = ''; 
         dischargedList.forEach((item, index) => {
             const row = dischargeListTable.insertRow();
-            row.insertCell().textContent = `#${index + 1}`;
+            // Adiciona classes para o design da tabela
+            row.classList.add('discharge-row');
+            
+            const cellIndex = row.insertCell();
+            cellIndex.textContent = `#${index + 1}`;
+            cellIndex.classList.add('center-text');
+
             row.insertCell().textContent = item.kg.toFixed(2);
             row.insertCell().textContent = item.caixas;
         });
+
+        // Adiciona uma mensagem se a lista estiver vazia
+        if (dischargedList.length === 0) {
+            const row = dischargeListTable.insertRow();
+            const cell = row.insertCell();
+            cell.colSpan = 3;
+            cell.textContent = "Nenhum palete descarregado ainda.";
+            cell.classList.add('no-data-row');
+        }
     }
     
     // Atualiza o estado do botão de download
@@ -831,8 +848,10 @@ function generateReportText() {
     
     report += '2. METAS DE DESCARREGO (ESTIMATIVA)\n';
     report += `KG Médio/Palete (Estimado): ${KG_POR_PALETE_ESTIMADO.toFixed(2)} KG\n`;
+    report += `KG Médio/Caixa (Estimado): ${KG_POR_CAIXA_ESTIMADO.toFixed(2)} KG\n`; // Novo: inclui a referência do KG/Caixa
     report += `Total de Caixas (Estimado): ${Math.round(totalKgNota / KG_POR_CAIXA_ESTIMADO)} caixas\n`;
-    report += `Total de Paletes (Estimado): ${totalPaletesEstimados.toFixed(2)} paletes\n\n`;
+    // ATUALIZADO: Arredondamento para cima
+    report += `Total de Paletes (Estimado): ${Math.ceil(totalPaletesEstimados)} paletes\n\n`;
 
     report += '3. DETALHE DO DESCARREGAMENTO (REGISTRO POR PALETE)\n';
     report += '--------------------------------------------------\n';
@@ -850,7 +869,8 @@ function generateReportText() {
     report += '5. FALTA PARA CONCLUIR\n';
     report += `KG Restantes: ${remainingKg.toFixed(2)} KG\n`;
     report += `Caixas Restantes: ${Math.round(remainingCaixas)} caixas\n`;
-    report += `Paletes Restantes: ${remainingPaletes.toFixed(2)} paletes\n`;
+    // ATUALIZADO: Arredondamento para cima
+    report += `Paletes Restantes: ${Math.ceil(remainingPaletes)} paletes\n`; 
     report += '==================================================\n';
 
     return report;
@@ -956,6 +976,9 @@ if(targetInputSection) {
         if (dischargeSummarySection) dischargeSummarySection.style.display = 'none';
         if (remainingSummarySection) remainingSummarySection.style.display = 'none';
         resetButton.style.display = 'none';
+
+        // Garante que a lista de descarregamento seja limpa e exiba a mensagem 'No-Data'
+        updateDischargeSummary();
     });
 
     targetInputSection.appendChild(resetButton);
