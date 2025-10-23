@@ -621,3 +621,20 @@ footer {
         grid-template-columns: repeat(4, 1fr); /* 4 colunas em desktop */
     }
 }
+/* Adicionar em style.css para consistência visual */
+.input-group input[type="text"] {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid var(--tertiary-color);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    color: var(--text-dark);
+    background-color: var(--white);
+    outline: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.input-group input[type="text"]:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(93, 63, 211, 0.2);
+}
