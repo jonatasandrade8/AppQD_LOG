@@ -39,8 +39,7 @@
     </nav>
 
     <main class="calculator-main">
-        <section id="target-input-section" class="calculator-section">	            
-			<h2>1. Dados da Nota Fiscal</h2>
+        <section id="target-input-section" class="calculator-section">	            <h2>1. Dados da Nota Fiscal</h2>
 	            <div class="input-group">
 	                <label for="select-entregador">Entregador</label>
 	                <select id="select-entregador"></select>
@@ -57,9 +56,9 @@
         <section id="target-summary-section" class="calculator-section" style="display: none;">
             <h2>2. Dados da Entrega(estimativas)</h2>
             <div class="summary-info">
-                <p><strong>Peso padrão do palete:</strong> <span id="target-kg-per-pallet">0.00</span> kg</p>
-                <p><strong>Irão descer </strong> <span id="target-total-caixas">0</span> caixas</p>
-                <p><strong>Irão pesar </strong> <span id="target-total-paletes">0.00</span> paletes</p>
+                <p><strong>Base de cálculo padrão:</strong> <span id="target-kg-per-pallet">0.00</span> kg por palete</p>
+                <p><strong>Total de Caixas:</strong> <span id="target-total-caixas">0</span> caixas</p>
+                <p><strong>Total de Paletes:</strong> <span id="target-total-paletes">0.00</span> paletes</p>
             </div>
         </section>
         
@@ -81,10 +80,10 @@
         </section>
 
         <section id="discharge-summary-section" class="calculator-section" style="display: none;">
-            <h2>4. Descarregou até o momento</h2>
+            <h2>4. Descarregado até o momento</h2>
             <div class="summary-info">
-                <p><strong>Total de </strong> <span id="total-discharged-kg">0.00</span> kg descarregados</p>
-                <p><strong>Total de </strong> <span id="total-discharged-caixas">0</span> caixas descarregadas</p>
+                <p><strong>Total Descarregado:</strong> <span id="total-discharged-kg">0.00</span> kg</p>
+                <p><strong>Total de Caixas Descarregadas:</strong> <span id="total-discharged-caixas">0</span> caixas</p>
             </div>
            <table style="width: 100%; text-align: center;" class="discharge-table">
                 <thead>
@@ -112,9 +111,9 @@
 	            <div id="status-message" class="status-box"></div> <!-- NOVO: Caixa de Status -->
 
 	            <div class="summary-info remaining-info">
-	                <p><strong>Ainda faltam descer </strong> <span id="remaining-kg" class="missing-value">0.00</span> kg</p>
-	                <p><strong>Ainda faltam descer </strong> <span id="remaining-caixas" class="missing-value">0</span> caixas</p>
-	                <p><strong>Ainda faltam </strong> <span id="remaining-paletes" class="missing-value">0</span> paletes</p>
+	                <p><strong>KG Restantes:</strong> <span id="remaining-kg" class="missing-value">0.00</span> kg</p>
+	                <p><strong>Caixas Restantes:</strong> <span id="remaining-caixas" class="missing-value">0</span> caixas</p>
+	                <p><strong>Paletes Restantes:</strong> <span id="remaining-paletes" class="missing-value">0</span> paletes</p>
 	            </div>
 	        </section>
     </main>
