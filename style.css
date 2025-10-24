@@ -848,3 +848,63 @@ footer {
     color: #cc0000; /* Vermelho escuro */
     font-weight: 700;
 }
+.discharge-table {
+    /* 1. Mudar para 'collapse' para unir as células horizontalmente (remove o espaçamento) */
+    border-collapse: collapse;
+    
+    /* 2. Remover border-spacing, pois as células estarão unidas */
+    border-spacing: 0; 
+    
+    /* 3. Borda externa da tabela */
+    border: 2px solid #2c0e5a;
+    border-radius: 15px;
+    overflow: hidden; 
+    /* O overflow: hidden e o border-radius na tabela são cruciais para o arredondamento externo */
+    width: 100%; /* Garantir que ocupe todo o espaço */
+}
+
+/* ------------------ ESTILO GERAL DAS CÉLULAS (th e td) ------------------ */
+.discharge-table th,
+.discharge-table td {
+    padding: 10px;
+    text-align: center;
+    background-color: #ffffff;
+    
+    /* Remove todas as bordas anteriores */
+    border: none;
+    
+    /* 4. Criar a linha divisória vertical parcial (|) */
+    /* Aplica uma borda fina à direita de todas as células, exceto a última. */
+    border-right: 1px solid #ddd; 
+    
+    /* 5. Criar a linha de separação horizontal entre as linhas (opcional, mas recomendado) */
+    border-bottom: 1px solid #ddd;
+}
+
+/* ------------------ Remover a linha vertical na última coluna ------------------ */
+.discharge-table th:last-child,
+.discharge-table td:last-child {
+    border-right: none; /* A última célula da linha não precisa de divisor à direita */
+}
+
+
+/* ------------------ ENFASE NO CABEÇALHO (th) ------------------ */
+.discharge-table th {
+    background-color: #e0e0f8; 
+    font-weight: bold;
+    border-bottom: 2px solid #2c0e5a; /* Enfatiza a linha de separação entre cabeçalho e corpo */
+    border-top: none; /* Remove bordas superiores indesejadas */
+}
+
+/* ------------------ Ajustes para a primeira e última célula (para bordas e arredondamento) ------------------ */
+
+/* Borda lateral esquerda na primeira célula de cada linha */
+.discharge-table th:first-child,
+.discharge-table td:first-child {
+    border-left: none; /* Deixamos a borda da tabela se encarregar disso */
+}
+
+/* Remover a borda inferior na última linha do corpo */
+.discharge-table tbody tr:last-child td {
+    border-bottom: none;
+}
