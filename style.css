@@ -848,6 +848,29 @@ footer {
     color: #cc0000; /* Vermelho escuro */
     font-weight: 700;
 }
+
+/* Estilos para a Caixa de Status na Seção 5 */
+.status-box {
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: var(--border-radius);
+    font-weight: bold;
+    text-align: center;
+    color: var(--text-dark);
+    display: none; /* Inicialmente escondido */
+}
+
+.status-box.green {
+    background-color: #d4edda; /* Fundo verde claro */
+    color: #155724; /* Texto verde escuro */
+    border: 1px solid #c3e6cb;
+}
+
+.status-box.yellow {
+    background-color: #fff3cd; /* Fundo amarelo claro */
+    color: #856404; /* Texto amarelo escuro */
+    border: 1px solid #ffeeba;
+}
 .discharge-table {
     /* 1. Mudar para 'collapse' para unir as células horizontalmente (remove o espaçamento) */
     border-collapse: collapse;

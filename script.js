@@ -670,11 +670,32 @@ if (shareAllBtn && navigator.share) {
     });
 }
 
-// Inicializa a galeria e os dropdowns ao carregar a página
-document.addEventListener('DOMContentLoaded', () => {
-    loadAndPopulateDropdowns();
-    updatePhotoGallery();
-});
+	// Inicializa a galeria e os dropdowns ao carregar a página
+	document.addEventListener('DOMContentLoaded', () => {
+	    // Verifica se a página é a calculadora-cd.html (não tem selectRede)
+	    if (document.getElementById('input-total-kg')) {
+	        // Apenas preenche o entregador na calculadora
+	        if (selectEntregador) {
+	            populateSelect(selectEntregador, APP_DATA.ENTREGADORES, "Selecione o Entregador");
+	        }
+	        // Adiciona um listener para habilitar o botão de cálculo
+	        if (selectEntregador && inputTotalKg && calculateTargetsBtn) {
+	            const checkInputs = () => {
+	                const kg = parseFloat(inputTotalKg.value);
+	                const entregadorSelecionado = selectEntregador.value;
+	                calculateTargetsBtn.disabled = isNaN(kg) || kg <= 0 || !entregadorSelecionado;
+	            };
+	            selectEntregador.addEventListener('change', checkInputs);
+	            inputTotalKg.addEventListener('input', checkInputs);
+	            checkInputs(); // Checagem inicial
+	        }
+	
+	    } else {
+	        // Lógica original para páginas de câmera
+	        loadAndPopulateDropdowns();
+	        updatePhotoGallery();
+	    }
+	});
 
 
 // ==================== FUNCIONALIDADES DA CALCULADORA CD (Nordestão) ====================
@@ -780,15 +801,37 @@ function updateDischargeSummary() {
     if (document.getElementById('total-discharged-caixas')) document.getElementById('total-discharged-caixas').textContent = totalDischargedCaixas;
     
     // Lógica do Restante
-    const remainingKg = totalKgNota - totalDischargedKg;
-	    const remainingCaixas = (totalKgNota / KG_POR_CAIXA_ESTIMADO) - totalDischargedCaixas;
-    const remainingPaletes = Math.ceil(remainingKg / KG_POR_PALETE_ESTIMADO);
+	    const remainingKg = totalKgNota - totalDischargedKg;
+	    // Caixas Restantes agora depende dos KG Restantes
+	    const remainingCaixas = remainingKg / KG_POR_CAIXA_ESTIMADO; 
+	    const remainingPaletes = Math.ceil(remainingKg / KG_POR_PALETE_ESTIMADO);
 
     if (document.getElementById('remaining-kg')) document.getElementById('remaining-kg').textContent = remainingKg.toFixed(2);
     if (document.getElementById('remaining-caixas')) document.getElementById('remaining-caixas').textContent = Math.round(remainingCaixas);
-    if (document.getElementById('remaining-paletes')) document.getElementById('remaining-paletes').textContent = remainingPaletes;
-    
-    // Atualiza a tabela
+	    if (document.getElementById('remaining-paletes')) document.getElementById('remaining-paletes').textContent = remainingPaletes;
+	    
+	    // Lógica de Status (Etiquetas Verde/Amarela)
+	    const statusMessage = document.getElementById('status-message');
+	    const tolerance = 5; // Tolerância de 5kg para considerar "atingido"
+	    
+	    statusMessage.style.display = 'none';
+	    statusMessage.classList.remove('green', 'yellow');
+	    statusMessage.textContent = '';
+
+	    if (remainingKg <= tolerance && remainingKg >= 0) {
+	        // Status Verde: Peso atingido (dentro da tolerância)
+	        statusMessage.style.display = 'block';
+	        statusMessage.classList.add('green');
+	        statusMessage.innerHTML = `✅ **PESO ATINGIDO!** Restam apenas ${remainingKg.toFixed(2)} KG.`;
+	    } else if (remainingKg < 0) {
+	        // Status Amarelo: Peso ultrapassado
+	        const excessKg = Math.abs(remainingKg);
+	        statusMessage.style.display = 'block';
+	        statusMessage.classList.add('yellow');
+	        statusMessage.innerHTML = `⚠️ **PESO EXCEDIDO!** Retirar **${excessKg.toFixed(2)} KG** para atingir o volume da nota.`;
+	    }
+
+	    // Atualiza a tabela
 	    if (dischargeListTable) {
 	        dischargeListTable.innerHTML = '';
 	        dischargedList.forEach((item, index) => {
@@ -875,15 +918,18 @@ function generateReportText() {
     const totalDischargedCaixas = dischargedList.reduce((sum, item) => sum + item.caixas, 0);
     const totalPaletesEstimados = Math.ceil(totalKgNota / KG_POR_PALETE_ESTIMADO);
 
-    const remainingKg = totalKgNota - totalDischargedKg;
-    const remainingCaixas = (totalKgNota / KG_POR_CAIXA_ESTIMADO) - totalDischargedCaixas;
-    const remainingPaletes = Math.ceil(remainingKg / KG_POR_PALETE_ESTIMADO);
+	    const remainingKg = totalKgNota - totalDischargedKg;
+	    const remainingCaixas = remainingKg / KG_POR_CAIXA_ESTIMADO; // Depende dos KG Restantes
+	    const remainingPaletes = Math.ceil(remainingKg / KG_POR_PALETE_ESTIMADO);
     
     const date = new Date().toLocaleString('pt-BR');
 
     let report = `RELATÓRIO DE DESCARREGAMENTO - CD NORDESTÃO\n`;
-    report += `QDELÍCIA FRUTAS - Gerado em: ${date}\n`;
-    report += '==================================================\n\n';
+	    const entregador = selectEntregador ? selectEntregador.value : 'N/A';
+
+	    report += `QDELÍCIA FRUTAS - Gerado em: ${date}\n`;
+	    report += `Entregador: ${entregador}\n`;
+	    report += '==================================================\n\n';
     
     report += '1. DADOS DA NOTA FISCAL\n';
     report += `Volume Total da Nota: ${totalKgNota.toFixed(2)} KG\n\n`;
@@ -894,24 +940,43 @@ function generateReportText() {
     report += `Total de Paletes (Estimado): ${totalPaletesEstimados} paletes\n\n`;
 
 	    report += '3. DETALHE DO DESCARREGAMENTO (REGISTRO POR PALETE)\n';
-	    report += '==================================================================\n';
-	    report += '|| Palete # || KG Conferidos || Caixas Conferidas || Peso Médio/Caixa ||\n';
-	    report += '==================================================================\n';
+	    // Otimização da tabela para visualização em texto (usando abreviações e espaçamento)
+	    report += '======================================================\n';
+	    report += '|| Palete || KG Conf. || Cx Conf. || P. Médio/Cx ||\n';
+	    report += '======================================================\n';
 	    dischargedList.forEach((item, index) => {
 	        const pesoMedioCaixa = item.kg / item.caixas;
-	        report += `|| #${index + 1} || ${item.kg.toFixed(2)} || ${item.caixas} || ${pesoMedioCaixa.toFixed(2)} ||\n`;
+	        // Garante que os campos tenham um tamanho mínimo para alinhamento
+	        const paleteNum = `#${index + 1}`.padEnd(8);
+	        const kgConf = item.kg.toFixed(2).padEnd(8);
+	        const cxConf = item.caixas.toString().padEnd(8);
+	        const pMedioCx = pesoMedioCaixa.toFixed(2).padEnd(11);
+	        
+	        report += `|| ${paleteNum} || ${kgConf} || ${cxConf} || ${pMedioCx} ||\n`;
 	    });
-	    report += '==================================================================\n\n';
+	    report += '======================================================\n\n';
 
-    report += '4. RESUMO GERAL\n';
-    report += `TOTAL KG Descarregado: ${totalDischargedKg.toFixed(2)} KG\n`;
-    report += `TOTAL Caixas Descarregadas: ${totalDischargedCaixas} caixas\n\n`;
-    
-    report += '5. FALTA PARA CONCLUIR\n';
-    report += `KG Restantes: ${remainingKg.toFixed(2)} KG\n`;
-    report += `Caixas Restantes: ${Math.round(remainingCaixas)} caixas\n`;
-    report += `Paletes Restantes: ${remainingPaletes} paletes\n`;
-    report += '==================================================\n';
+	    report += '4. RESUMO GERAL\n';
+	    report += `TOTAL KG Descarregado: ${totalDischargedKg.toFixed(2)} KG\n`;
+	    report += `TOTAL Caixas Descarregadas: ${totalDischargedCaixas} caixas\n\n`;
+	    
+	    report += '5. FALTA PARA CONCLUIR\n';
+	    
+	    // Inclui o status de KG no relatório
+	    const tolerance = 5;
+	    if (remainingKg <= tolerance && remainingKg >= 0) {
+	        report += `STATUS: ✅ PESO ATINGIDO! Restam apenas ${remainingKg.toFixed(2)} KG.\n`;
+	    } else if (remainingKg < 0) {
+	        const excessKg = Math.abs(remainingKg);
+	        report += `STATUS: ⚠️ PESO EXCEDIDO! Retirar ${excessKg.toFixed(2)} KG para atingir o volume da nota.\n`;
+	    } else {
+	        report += `STATUS: Em andamento...\n`;
+	    }
+	    
+	    report += `KG Restantes: ${remainingKg.toFixed(2)} KG\n`;
+	    report += `Caixas Restantes: ${Math.round(remainingCaixas)} caixas\n`;
+	    report += `Paletes Restantes: ${remainingPaletes} paletes\n`;
+	    report += '==================================================\n';
 
 	    return report;
 	}
@@ -971,17 +1036,13 @@ function downloadReport() {
 
 const targetInputSection = document.getElementById('target-input-section');
 
-if (inputTotalKg && calculateTargetsBtn) {
-    // Habilita o botão apenas se o input tiver um valor válido
-    inputTotalKg.addEventListener('input', () => {
-        const kg = parseFloat(inputTotalKg.value);
-        if (calculateTargetsBtn) calculateTargetsBtn.disabled = isNaN(kg) || kg <= 0;
-    });
-
-    calculateTargetsBtn.addEventListener('click', () => {
-        calculateTargets(inputTotalKg.value);
-    });
-}
+	if (inputTotalKg && calculateTargetsBtn) {
+	    // O listener foi movido para o bloco DOMContentLoaded para incluir a checagem do entregador.
+	
+	    calculateTargetsBtn.addEventListener('click', () => {
+	        calculateTargets(inputTotalKg.value);
+	    });
+	}
 
 if (addDischargeBtn) {
     addDischargeBtn.addEventListener('click', addDischargeEntry);
