@@ -3,7 +3,7 @@
 const APP_DATA = {
     // Entregadores (lista independente)
     ENTREGADORES: [
-        "José Luiz",
+        "Jose Luiz",
         "Paulino",
         "Antonio Ananias",
         "Emanuel",
@@ -822,7 +822,7 @@ function updateDischargeSummary() {
 	        // Status Verde: Peso atingido (dentro da tolerância)
 	        statusMessage.style.display = 'block';
 	        statusMessage.classList.add('green');
-	        statusMessage.innerHTML = `✅ **PESO ATINGIDO!** Restam apenas ${remainingKg.toFixed(2)} KG.`;
+	        statusMessage.innerHTML = `✅ **PESO ATINGIDO!** VERIFICAR COM O CONFERENTE!!**.`;
 	    } else if (remainingKg < 0) {
 	        // Status Amarelo: Peso ultrapassado
 	        const excessKg = Math.abs(remainingKg);
@@ -924,20 +924,20 @@ function generateReportText() {
     
     const date = new Date().toLocaleString('pt-BR');
 
-    let report = `RELATÓRIO DE DESCARREGAMENTO - CD NORDESTÃO\n`;
+    let report = `RELATORIO DE DESCARREGAMENTO - CD NORDESTAO\n`;
 	    const entregador = selectEntregador ? selectEntregador.value : 'N/A';
 
-	    report += `QDELÍCIA FRUTAS - Gerado em: ${date}\n`;
+	    report += `QDELICIA FRUTAS - Gerado em: ${date}\n`;
 	    report += `Entregador: ${entregador}\n`;
 	    report += '==================================================\n\n';
     
     report += '1. DADOS DA NOTA FISCAL\n';
     report += `Volume Total da Nota: ${totalKgNota.toFixed(2)} KG\n\n`;
     
-    report += '2. METAS DE DESCARREGO (ESTIMATIVA)\n';
-	    report += `KG Médio/Palete (Estimado): ${KG_POR_PALETE_ESTIMADO.toFixed(2)} KG\n`;
-    report += `Total de Caixas (Estimado): ${Math.round(totalKgNota / KG_POR_CAIXA_ESTIMADO)} caixas\n`;
-    report += `Total de Paletes (Estimado): ${totalPaletesEstimados} paletes\n\n`;
+    report += '2. DADOS DA ENTREGA\n';
+	    report += `BASE DE CALCULO: ${KG_POR_PALETE_ESTIMADO.toFixed(2)} KG POR PLT\n`;
+    report += `IRÁ DESCER(estimativa): ${Math.round(totalKgNota / KG_POR_CAIXA_ESTIMADO)} caixas\n`;
+    report += `IRÃO PESAR(estimativa): ${totalPaletesEstimados} PALETES \n\n`;
 
 	    report += '3. DETALHE DO DESCARREGAMENTO (REGISTRO POR PALETE)\n';
 	    // Otimização da tabela para visualização em texto (usando abreviações e espaçamento)
@@ -957,18 +957,18 @@ function generateReportText() {
 	    report += '======================================================\n\n';
 
 	    report += '4. RESUMO GERAL\n';
-	    report += `TOTAL KG Descarregado: ${totalDischargedKg.toFixed(2)} KG\n`;
-	    report += `TOTAL Caixas Descarregadas: ${totalDischargedCaixas} caixas\n\n`;
+	    report += `PESO TOTAL DESCARREGADO: ${totalDischargedKg.toFixed(2)} KG\n`;
+	    report += `TOTAL DE CXS DESCARREGADAS: ${totalDischargedCaixas} CXS\n\n`;
 	    
 	    report += '5. FALTA PARA CONCLUIR\n';
 	    
 	    // Inclui o status de KG no relatório
 	    const tolerance = 5;
 	    if (remainingKg <= tolerance && remainingKg >= 0) {
-	        report += `STATUS: ✅ PESO ATINGIDO! Restam apenas ${remainingKg.toFixed(2)} KG.\n`;
+	        report += `STATUS: ✅ PESO ATINGIDO! ENTREGA CONCUÍDA COM SUCESSO.\n`;
 	    } else if (remainingKg < 0) {
 	        const excessKg = Math.abs(remainingKg);
-	        report += `STATUS: ⚠️ PESO EXCEDIDO! Retirar ${excessKg.toFixed(2)} KG para atingir o volume da nota.\n`;
+	        report += `STATUS: ⚠️ PESO EXCEDIDO! Retirar ${excessKg.toFixed(2)} quilos para atingir o volume da nota.\n`;
 	    } else {
 	        report += `STATUS: Em andamento...\n`;
 	    }
