@@ -7,7 +7,8 @@ const APP_DATA = {
         "Paulino",
         "Antonio Ananias",
         "Emanuel",
-        "Cleiton"
+        "Cleiton",
+		"Jonatas"
     ],
 
     // Status (NOVO para Registro Geral)
