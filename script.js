@@ -48,6 +48,15 @@ const APP_DATA = {
         "Abacaxi",
         "TUDO"
     ],
+    PRODUTOS_CONFERENCIA: [
+        "Prata",
+        "Pacovan",
+        "Comprida",
+        "Leite",
+        "Nanica",
+        "Goiaba",
+        "Abacaxi",
+    ],
     
     // QUANTIDADES_KG foi removido, substituído por um input de texto.
 };

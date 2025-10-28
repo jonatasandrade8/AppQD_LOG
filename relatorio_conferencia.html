@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Relatório de Conferência de Produtos - Logística Qdelícia">
+    <title>Relatório de Conferência</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="./style.css"> 
+</head>
+<body>
+    
+    <div class="menu-overlay"></div>
+    <aside class="side-menu">
+        <a href="index.html"><i class="fas fa-home"></i> Início</a>
+        <a href="faltas_devolucoes.html"><i class="fas fa-receipt"></i> Faltas</a>
+        <a href="camera_geral.html"><i class="fas fa-camera"></i> Registrar</a>
+        <a href="camera_devolucao.html"><i class="fas fa-ban"></i> Devolução</a>
+        <a href="calculadora-cd.html">✔ Calculadora CD</a>
+        <a href="relatorio_conferencia.html" class="active"><i class="fas fa-clipboard-check"></i> Conferência</a>
+    </aside>
+
+    <header id="cabecalho-principal">
+        <button class="menu-toggle" aria-label="Abrir Menu">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="logo-placeholder">
+            <img src="./images/logo-qdelicia.png" alt="Logomarca Qdelícia Frutas"> 
+        </div>
+        <h1>Relatório de Conferência</h1>
+        <p>Dados da Nota Fiscal e Lançamento por Produto</p>
+    </header>
+    
+    <nav>
+        <a href="index.html"> Início</a>
+        <a href="faltas_devolucoes.html"> Faltas</a>
+        <a href="camera_geral.html"> Registrar</a>
+        <a href="camera_devolucao.html"> Devolução</a>
+        <a href="calculadora-cd.html"> Calculadora CD</a>
+        <a href="relatorio_conferencia.html" class="active"> Conferência</a>
+    </nav>
+    
+    <main class="conference-main-content">
+        
+        <section id="invoice-input-section" class="calculator-section">
+            <h2>1. Dados da Nota Fiscal</h2>
+            
+            <div class="input-group">
+                <label for="select-entregador"><i class="fas fa-id-card"></i> Entregador</label>
+                <select id="select-entregador" required>
+                    <option value="" disabled selected>Selecione o Entregador</option>
+                    </select>
+            </div>
+            
+            <div class="input-group">
+                <label for="select-rede"><i class="fas fa-warehouse"></i> Rede</label>
+                <select id="select-rede" required>
+                    <option value="" disabled selected>Selecione a Rede</option>
+                    </select>
+            </div>
+            
+            <div class="input-group">
+                <label for="select-loja"><i class="fas fa-map-marker-alt"></i> Loja</label>
+                <select id="select-loja" disabled required>
+                    <option value="" disabled selected>Selecione a Loja</option>
+                    </select>
+            </div>
+
+            <div class="product-targets-grid">
+                
+                <h3 style="grid-column: 1 / -1; text-align: center; margin-top: 15px;">Quantidades da Nota (KG)</h3>
+
+                <div class="input-group-inline">
+                    <label for="nota-pacovan">Pacovan (KG)</label>
+                    <input type="number" id="nota-pacovan" placeholder="0" min="0" value="">
+                </div>
+                <div class="input-group-inline">
+                    <label for="nota-prata">Prata (KG)</label>
+                    <input type="number" id="nota-prata" placeholder="0" min="0" value="">
+                </div>
+                <div class="input-group-inline">
+                    <label for="nota-nanica">Nanica (KG)</label>
+                    <input type="number" id="nota-nanica" placeholder="0" min="0" value="">
+                </div>
+                <div class="input-group-inline">
+                    <label for="nota-comprida">Comprida (KG)</label>
+                    <input type="number" id="nota-comprida" placeholder="0" min="0" value="">
+                </div>
+                <div class="input-group-inline">
+                    <label for="nota-leite">Leite (KG)</label>
+                    <input type="number" id="nota-leite" placeholder="0" min="0" value="">
+                </div>
+                <div class="input-group-inline">
+                    <label for="nota-goiaba">Goiaba (KG)</label>
+                    <input type="number" id="nota-goiaba" placeholder="0" min="0" value="">
+                </div>
+                <div class="input-group-inline">
+                    <label for="nota-abacaxi">Abacaxi (KG)</label>
+                    <input type="number" id="nota-abacaxi" placeholder="0" min="0" value="">
+                </div>
+            </div>
+            
+            <button id="start-conference-btn" class="action-btn primary-btn" disabled style="margin-top: 20px;">
+                <i class="fas fa-lock"></i> Preencha os Dados para Iniciar
+            </button>
+        </section>
+
+
+        <section id="conference-input-section" class="calculator-section" style="display: none;">
+            <h2>2. Lançamento da Conferência</h2>
+            
+            <div class="input-group">
+                <label for="select-product-launch"><i class="fas fa-seedling"></i> Tipo de Produto</label>
+                <select id="select-product-launch" required>
+                    <option value="" disabled selected>Selecione o Produto</option>
+                    </select>
+            </div>
+            
+            <div class="input-group">
+                <label for="input-product-kg"><i class="fas fa-weight-hanging"></i> Quantidade Recebida (KG)</label>
+                <input type="number" id="input-product-kg" placeholder="0.00" min="0" required>
+            </div>
+
+            <button id="add-item-btn" class="action-btn secondary-btn" disabled>
+                <i class="fas fa-plus-circle"></i> Adicionar Item
+            </button>
+            <button id="reset-conference-btn" class="action-btn reset-btn" style="display: none;">
+                <i class="fas fa-undo"></i> Reiniciar
+            </button>
+        </section>
+
+
+        <section id="conference-summary-section" class="calculator-section" style="display: none;">
+            <h2>3. Resumo e Diferença por Produto</h2>
+            
+            <table class="discharge-table" id="conference-table">
+                <thead>
+                    <tr>
+                        <th>Produto</th>
+                        <th>Nota (KG)</th>
+                        <th>Conferido (KG)</th>
+                        <th>Diferença (KG)</th>
+                    </tr>
+                </thead>
+                <tbody id="conference-summary-body">
+                    </tbody>
+            </table>
+
+            <div class="report-buttons">
+                <button id="share-report-btn" class="action-btn primary-btn" disabled><i class="fab fa-whatsapp"></i> Compartilhar WhatsApp</button>
+                <button id="download-report-btn" class="action-btn secondary-btn" disabled><i class="fas fa-download"></i> Baixar Relatório</button>
+            </div>
+        </section>
+
+    </main>
+    
+    <footer>
+        <p>&copy; 2025 Qdelícia Frutas. Todos os direitos reservados.</p>
+    </footer>
+
+    <a href="https://wa.me/5581997250086" class="whatsapp-btn" target="_blank">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+    <div class="back-to-top">
+        <i class="fas fa-arrow-up"></i>
+    </div>
+
+    <script src="script.js"></script> 
+    <script src="conference.js"></script>
+</body>
+</html>

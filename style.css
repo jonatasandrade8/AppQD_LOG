@@ -931,3 +931,44 @@ footer {
 .discharge-table tbody tr:last-child td {
     border-bottom: none;
 }
+/* ===================== ESTILIZAÇÃO PARA CAMPOS INLINE (RELATÓRIO DE CONFERÊNCIA) ===================== */
+
+.product-targets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+    margin-top: 20px;
+    padding: 10px;
+    border: 1px solid var(--tertiary-color);
+    border-radius: var(--border-radius);
+    background-color: var(--bg-light);
+}
+
+.input-group-inline {
+    display: flex;
+    flex-direction: column;
+}
+
+.input-group-inline label {
+    font-size: 0.9em;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: var(--text-dark);
+}
+
+/* Estilo do INPUT, replicando o padrão de camera_devolucao */
+.input-group-inline input[type="number"] {
+    padding: 10px;
+    border: 2px solid var(--tertiary-color);
+    border-radius: var(--border-radius);
+    font-size: 1em;
+    color: var(--text-dark);
+    background-color: var(--white);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.input-group-inline input[type="number"]:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 5px rgba(93, 63, 211, 0.5); /* Sombra roxa no foco */
+    outline: none;
+}
