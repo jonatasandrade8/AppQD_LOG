@@ -383,10 +383,17 @@ function getReportData() {
  * @returns {object} O objeto 'doc' do jsPDF.
  */
 function generateProfessionalPdf(data) {
-    if (typeof jsPDF === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
+    
+    // ============================ LINHA CORRIGIDA ============================
+    // A verificação antiga ( typeof jsPDF === 'undefined' || ... ) estava incorreta
+    // porque 'jsPDF' global não existe na versão UMD carregada pelo HTML.
+    // A verificação correta é pelo objeto 'window.jspdf' que contém a classe 'jsPDF'.
+    if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
         alert("Erro: A biblioteca jsPDF não foi carregada.");
         return null;
     }
+    // =========================================================================
+
     if (typeof window.jspdf.plugin.autotable === 'undefined') {
          alert("Erro: A biblioteca jsPDF-AutoTable não foi carregada.");
         return null;
