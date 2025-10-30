@@ -2,9 +2,9 @@
  * ARQUIVO: calculadora-cd.js
  * DESCRIÇÃO: Lógica exclusiva para a página calculadora-cd.html.
  *
- * IMPORTANTE: Esta versão modificada requer a biblioteca jsPDF.
- * Adicione no seu HTML:
- * <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+ * IMPORTANTE: Esta versão modificada requer:
+ * 1. jsPDF (https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js)
+ * 2. jsPDF-AutoTable (https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js)
  * ========================================================================
  */
 
@@ -113,8 +113,12 @@ const dischargeListTable = document.getElementById('discharge-list');
 const inputDischargeKg = document.getElementById('input-discharge-kg');
 const inputDischargeCaixas = document.getElementById('input-discharge-caixas');
 const addDischargeBtn = document.getElementById('add-discharge-btn');
-const downloadReportBtn = document.getElementById('download-report-btn');
-const shareReportBtn = document.getElementById('share-report-btn');
+
+// ================== NOVOS SELETORES DE BOTÃO ==================
+const downloadPdfBtn = document.getElementById('download-pdf-btn');
+const sharePdfBtn = document.getElementById('share-pdf-btn');
+const shareCsvBtn = document.getElementById('share-csv-btn');
+// ==============================================================
 
 
 // -----------------------------------------------------
@@ -247,13 +251,18 @@ function updateDischargeSummary() {
 	        });
 	    }
     
-    // Atualiza o estado do botão de download
-    if (downloadReportBtn) {
-        downloadReportBtn.disabled = dischargedList.length === 0;
+    // ================== ATUALIZA ESTADO DOS 3 BOTÕES ==================
+    const hasData = dischargedList.length > 0;
+    if (downloadPdfBtn) {
+        downloadPdfBtn.disabled = !hasData;
     }
-    if (shareReportBtn) {
-        shareReportBtn.disabled = dischargedList.length === 0;
+    if (sharePdfBtn) {
+        sharePdfBtn.disabled = !hasData;
     }
+    if (shareCsvBtn) {
+        shareCsvBtn.disabled = !hasData;
+    }
+    // ==================================================================
 }
 
 /**
@@ -300,125 +309,259 @@ function addDischargeEntry() {
 }
 
 
-// -----------------------------------------------------
-// 2. Lógica de Exportação (Download e Compartilhamento)
-// -----------------------------------------------------
+// -----------------------------------------------------------------
+// 2. Lógica de Exportação (PDF Profissional, CSV e Compartilhamento)
+// -----------------------------------------------------------------
 
 /**
- * @description Gera o conteúdo de texto para o relatório (base para o PDF).
- * @returns {string} O texto completo do relatório.
+ * @description Coleta todos os dados do relatório em um objeto estruturado.
+ * @returns {object} Um objeto contendo todos os dados para os relatórios.
  */
-function generateReportText() {
+function getReportData() {
     const totalDischargedKg = dischargedList.reduce((sum, item) => sum + item.kg, 0);
     const totalDischargedCaixas = dischargedList.reduce((sum, item) => sum + item.caixas, 0);
     const totalPaletesEstimados = Math.ceil(totalKgNota / KG_POR_PALETE_ESTIMADO);
+    const totalCaixasEstimadas = totalKgNota / KG_POR_CAIXA_ESTIMADO;
 
-	    const remainingKg = totalKgNota - totalDischargedKg;
-	    const remainingCaixas = remainingKg / KG_POR_CAIXA_ESTIMADO; // Depende dos KG Restantes
-	    const remainingPaletes = Math.ceil(remainingKg / KG_POR_PALETE_ESTIMADO);
+    const remainingKg = totalKgNota - totalDischargedKg;
+    const remainingCaixas = remainingKg / KG_POR_CAIXA_ESTIMADO; 
+    const remainingPaletes = Math.ceil(remainingKg / KG_POR_PALETE_ESTIMADO);
     
-    const date = new Date().toLocaleString('pt-BR');
+    const date = new Date();
+    const tolerance = 5;
+    let status = "Em andamento...";
 
-    let report = `RELATORIO DE DESCARREGAMENTO - CD NORDESTAO\n`;
-	    const entregador = selectEntregador ? selectEntregador.value : 'N/A';
+    if (remainingKg <= tolerance && remainingKg >= 0) {
+        status = `PESO ATINGIDO! ENTREGA REALIZADA!`;
+    } else if (remainingKg < 0) {
+        const excessKg = Math.abs(remainingKg);
+        status = `PESO EXCEDIDO! Retirar ${excessKg.toFixed(2)} KG.`;
+    }
 
-	    report += `QDELICIA FRUTAS - Gerado em: ${date}\n`;
-	    report += `Entregador: ${entregador}\n`;
-	    report += '==================================================\n\n';
+    // Dados da tabela de detalhes
+    const detalhes = dischargedList.map((item, index) => ({
+        palete: `#${index + 1}`,
+        kg: item.kg,
+        caixas: item.caixas,
+        pesoMedio: item.kg / item.caixas
+    }));
+
+    return {
+        entregador: selectEntregador ? selectEntregador.value : 'N/A',
+        dataGeracao: date.toLocaleString('pt-BR'),
+        dataArquivo: date.toISOString().slice(0, 10).replace(/-/g, ''),
+        
+        nota: {
+            totalKgNota: totalKgNota
+        },
+        
+        estimativas: {
+            baseCalculo: KG_POR_PALETE_ESTIMADO,
+            totalCaixasEstimadas: Math.round(totalCaixasEstimadas),
+            totalPaletesEstimados: totalPaletesEstimados
+        },
+
+        detalhes: detalhes, // Array de objetos para a tabela
+
+        resumo: {
+            totalDischargedKg: totalDischargedKg,
+            totalDischargedCaixas: totalDischargedCaixas
+        },
+        
+        restante: {
+            status: status,
+            remainingKg: remainingKg,
+            remainingCaixas: Math.round(remainingCaixas),
+            remainingPaletes: remainingPaletes
+        }
+    };
+}
+
+/**
+ * @description (NOVO) Gera um objeto jsPDF profissional com AutoTable.
+ * @param {object} data - O objeto de dados da função getReportData()
+ * @returns {object} O objeto 'doc' do jsPDF.
+ */
+function generateProfessionalPdf(data) {
+    if (typeof jsPDF === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
+        alert("Erro: A biblioteca jsPDF não foi carregada.");
+        return null;
+    }
+    if (typeof window.jspdf.plugin.autotable === 'undefined') {
+         alert("Erro: A biblioteca jsPDF-AutoTable não foi carregada.");
+        return null;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    let startY = 20; // Posição vertical inicial
+
+    // === CABEÇALHO ===
+    doc.setFontSize(18);
+    doc.setFont(undefined, 'bold');
+    doc.text("RELATÓRIO DE DESCARREGAMENTO", doc.internal.pageSize.getWidth() / 2, startY, { align: 'center' });
+    startY += 8;
     
-    report += '1. DADOS DA NOTA FISCAL\n';
-    report += `Volume Total da Nota: ${totalKgNota.toFixed(2)} KG\n\n`;
+    doc.setFontSize(11);
+    doc.setFont(undefined, 'normal');
+    doc.text(`CD NORDESTAO - QDELICIA FRUTAS`, doc.internal.pageSize.getWidth() / 2, startY, { align: 'center' });
+    startY += 12;
+
+    doc.setFontSize(10);
+    doc.text(`Entregador: ${data.entregador}`, 14, startY);
+    doc.text(`Gerado em: ${data.dataGeracao}`, doc.internal.pageSize.getWidth() - 14, startY, { align: 'right' });
+    startY += 10;
+
+    // === SEÇÃO 1: DADOS DA NOTA ===
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text("1. DADOS DA NOTA FISCAL", 14, startY);
+    startY += 7;
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    doc.text(`Volume Total da Nota: ${data.nota.totalKgNota.toFixed(2)} KG`, 16, startY);
+    startY += 10;
+
+    // === SEÇÃO 2: ESTIMATIVAS ===
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text("2. DADOS DA ENTREGA (ESTIMATIVAS)", 14, startY);
+    startY += 7;
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    doc.text(`Base de Cálculo: ${data.estimativas.baseCalculo.toFixed(2)} KG por palete`, 16, startY);
+    startY += 5;
+    doc.text(`Total de Caixas (Estimado): ${data.estimativas.totalCaixasEstimadas} caixas`, 16, startY);
+    startY += 5;
+    doc.text(`Total de Paletes (Estimado): ${data.estimativas.totalPaletesEstimados} paletes`, 16, startY);
+    startY += 12;
+
+    // === SEÇÃO 3: TABELA DE DETALHES ===
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text("3. DETALHES DA ENTREGA", 14, startY);
+    startY += 7;
+
+    const tableHead = [['Palete', 'KG Conferido', 'Caixas Conferidas', 'Média/Cx (KG)']];
+    const tableBody = data.detalhes.map(item => [
+        item.palete,
+        item.kg.toFixed(2),
+        item.caixas,
+        item.pesoMedio.toFixed(2)
+    ]);
     
-    report += '2. DADOS DA ENTREGA:\n';
-	    report += `BASE DE CALCULO PADRAO: ${KG_POR_PALETE_ESTIMADO.toFixed(2)} KG POR PALETE\n`;
-    report += `Total de Caixas (Estimado): ${Math.round(totalKgNota / KG_POR_CAIXA_ESTIMADO)} caixas\n`;
-    report += `Total de Paletes (Estimado): ${totalPaletesEstimados} paletes\n\n`;
+    // Adiciona o total na tabela
+    tableBody.push([
+        { content: 'TOTAL', colSpan: 1, styles: { fontStyle: 'bold' } },
+        { content: data.resumo.totalDischargedKg.toFixed(2), styles: { fontStyle: 'bold' } },
+        { content: data.resumo.totalDischargedCaixas, styles: { fontStyle: 'bold' } },
+        { content: (data.resumo.totalDischargedKg / data.resumo.totalDischargedCaixas || 0).toFixed(2), styles: { fontStyle: 'bold' } }
+    ]);
 
-	    report += '3. DETALHES DA ENTREGA\n';
-	    // Otimização da tabela para visualização em texto (usando abreviações e espaçamento)
-	    report += '======================================================\n';
-	    report += '|| Palete || KG Conf. || Cx Conf. || P.Medio/Cx ||\n';
-	    report += '======================================================\n';
-	    dischargedList.forEach((item, index) => {
-	        const pesoMedioCaixa = item.kg / item.caixas;
-	        // Garante que os campos tenham um tamanho mínimo para alinhamento
-	        const paleteNum = `${index + 1}º`.padEnd(8);
-	        const kgConf = item.kg.toFixed(2).padEnd(8);
-	        const cxConf = item.caixas.toString().padEnd(8);
-	        const pMedioCx = pesoMedioCaixa.toFixed(2).padEnd(11);
-	        
-	        report += `|| ${paleteNum} || ${kgConf} || ${cxConf} || ${pMedioCx} ||\n`;
-	    });
-	    report += '======================================================\n\n';
+    doc.autoTable({
+        head: tableHead,
+        body: tableBody,
+        startY: startY,
+        theme: 'striped', // 'striped', 'grid', 'plain'
+        headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold' },
+        didDrawPage: (hookData) => {
+            // Atualiza a posição Y para continuar o texto após a tabela
+            startY = hookData.cursor.y;
+        }
+    });
 
-	    report += '4. RESUMO GERAL\n';
-	    report += `TOTAL KG Descarregado: ${totalDischargedKg.toFixed(2)} KG\n`;
-	    report += `TOTAL Caixas Descarregadas: ${totalDischargedCaixas} caixas\n\n`;
-	    
-	    report += '5. FALTA PARA CONCLUIR\n';
-	    
-	    // Inclui o status de KG no relatório
-	    const tolerance = 5;
-	    if (remainingKg <= tolerance && remainingKg >= 0) {
-	        report += `STATUS: PESO ATINGIDO! ENTREGA REALIZADA!\n`;
-	    } else if (remainingKg < 0) {
-	        const excessKg = Math.abs(remainingKg);
-	        report += `STATUS: PESO EXCEDIDO! Retirar ${excessKg.toFixed(2)} KG para atingir o volume da nota.\n`;
-	    } else {
-	        report += `STATUS: Em andamento...\n`;
-	    }
-	    
-	    report += `KG Restantes: ${remainingKg.toFixed(2)} KG\n`;
-	    report += `Caixas Restantes: ${Math.round(remainingCaixas)} caixas\n`;
-	    report += `Paletes Restantes: ${remainingPaletes} paletes\n`;
-	    report += '==================================================\n';
+    startY += 10; // Espaçamento após a tabela
 
-	    return report;
+    // === SEÇÃO 4: FALTA PARA CONCLUIR ===
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text("4. FALTA PARA CONCLUIR (RESTANTE)", 14, startY);
+    startY += 7;
+
+    // Define a cor do status
+    if (data.restante.status.includes('ATINGIDO')) {
+        doc.setTextColor(0, 128, 0); // Verde
+    } else if (data.restante.status.includes('EXCEDIDO')) {
+        doc.setTextColor(255, 165, 0); // Laranja/Amarelo
+    }
+    doc.text(`STATUS: ${data.restante.status}`, 16, startY);
+    doc.setTextColor(0, 0, 0); // Reseta a cor para preto
+    startY += 7;
+    
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    doc.text(`KG Restantes: ${data.restante.remainingKg.toFixed(2)} KG`, 16, startY);
+    startY += 5;
+    doc.text(`Caixas Restantes (Estimado): ${data.restante.remainingCaixas} caixas`, 16, startY);
+    startY += 5;
+    doc.text(`Paletes Restantes (Estimado): ${data.restante.remainingPaletes} paletes`, 16, startY);
+    
+    return doc;
+}
+
+/**
+ * @description (NOVO) Gera o texto para um arquivo CSV.
+ * @param {object} data - O objeto de dados da função getReportData()
+ * @returns {string} O texto formatado em CSV.
+ */
+function generateCsvText(data) {
+    // Usa ponto e vírgula (;) como separador, comum no Brasil para abrir no Excel
+    const separator = ';';
+    const eol = '\r\n'; // End of Line
+
+    let csv = `RELATORIO DE DESCARREGAMENTO - CD NORDESTAO${eol}`;
+    csv += `Entregador${separator}${data.entregador}${eol}`;
+    csv += `Data Geracao${separator}${data.dataGeracao}${eol}`;
+    csv += `${eol}`; // Linha em branco
+
+    // Resumo
+    csv += `RESUMO${separator}Valor${eol}`;
+    csv += `Total KG (Nota)${separator}${data.nota.totalKgNota.toFixed(2)}${eol}`;
+    csv += `Total KG (Descarregado)${separator}${data.resumo.totalDischargedKg.toFixed(2)}${eol}`;
+    csv += `Total Caixas (Descarregado)${separator}${data.resumo.totalDischargedCaixas}${eol}`;
+    csv += `KG Restantes${separator}${data.restante.remainingKg.toFixed(2)}${eol}`;
+    csv += `Status${separator}${data.restante.status}${eol}`;
+    csv += `${eol}`; // Linha em branco
+
+    // Detalhes (Tabela)
+    csv += `DETALHES DA ENTREGA${eol}`;
+    csv += `Palete${separator}KG Conferido${separator}Caixas Conferidas${separator}Media/Cx (KG)${eol}`;
+    
+    data.detalhes.forEach(item => {
+        csv += `${item.palete}${separator}${item.kg.toFixed(2)}${separator}${item.caixas}${separator}${item.pesoMedio.toFixed(2)}${eol}`;
+    });
+    
+    return csv;
 }
 	
 /**
- * @description MODIFICADO: Compartilha o relatório em PDF (via Web Share API).
- * REQUER A BIBLIOTECA jsPDF
+ * @description (MODIFICADO) Compartilha o relatório em PDF (via Web Share API).
  */
-async function shareReport() {
+async function sharePdfReport() {
     if (dischargedList.length === 0) {
         alert("Não há registros de descarregamento para compartilhar.");
         return;
     }
 
-    if (typeof jsPDF === 'undefined') {
-        alert("Erro: A biblioteca jsPDF não foi carregada. O compartilhamento do PDF falhou.");
-        console.error("jsPDF não está definida. Adicione <script src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'></script> ao seu HTML.");
-        return;
-    }
+    const data = getReportData();
+    const doc = generateProfessionalPdf(data);
+    if (!doc) return; // Erro já foi alertado em generateProfessionalPdf
 
     if (!navigator.share || !navigator.canShare) {
-        alert("A função de compartilhamento de arquivos não é suportada por este navegador. Tente usar o botão 'Baixar Relatório (PDF)'.");
+        alert("A função de compartilhamento de arquivos não é suportada por este navegador. Tente usar o botão 'Baixar PDF'.");
         return;
     }
 
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    const reportText = generateReportText();
-    const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const filename = `Relatorio_CD_Nordestao_${date}.pdf`;
-
-    // Definir fonte monoespaçada para manter o alinhamento da tabela
-    doc.setFont("Courier", "normal");
-    doc.setFontSize(10);
-    
-    // Adiciona o texto (Margem de 10mm)
-    doc.text(reportText, 10, 10); 
+    const filename = `Relatorio_CD_Nordestao_${data.dataArquivo}.pdf`;
     
     // Gera o PDF como um Blob
     const pdfBlob = doc.output('blob');
     
     const file = new File([pdfBlob], filename, { type: 'application/pdf' });
-    const entregador = selectEntregador ? selectEntregador.value : 'Relatório';
     
     const shareData = {
         files: [file],
-        title: `Relatório CD Nordestão - ${entregador}`,
+        title: `Relatório CD Nordestão - ${data.entregador}`,
         text: `Segue o relatório de descarregamento (PDF).`
     };
 
@@ -427,8 +570,8 @@ async function shareReport() {
             await navigator.share(shareData);
         } catch (error) {
             if (error.name !== 'AbortError') {
-                console.error('Erro ao compartilhar:', error);
-                alert(`Erro ao compartilhar: ${error.message}\n\Tente baixar o relatório e compartilhar manually.`);
+                console.error('Erro ao compartilhar PDF:', error);
+                alert(`Erro ao compartilhar: ${error.message}\n\Tente baixar o relatório e compartilhar manualmente.`);
             }
         }
     } else {
@@ -436,35 +579,64 @@ async function shareReport() {
     }
 }
 
+/**
+ * @description (NOVO) Compartilha o relatório em CSV (via Web Share API).
+ */
+async function shareCsvReport() {
+    if (dischargedList.length === 0) {
+        alert("Não há registros de descarregamento para compartilhar.");
+        return;
+    }
+
+    if (!navigator.share || !navigator.canShare) {
+        alert("A função de compartilhamento de arquivos não é suportada por este navegador.");
+        return;
+    }
+
+    const data = getReportData();
+    const csvText = generateCsvText(data);
+    const filename = `Relatorio_CD_Nordestao_${data.dataArquivo}.csv`;
+
+    // Gera o CSV como um Blob
+    const csvBlob = new Blob([csvText], { type: 'text/csv;charset=utf-8;' });
+    
+    const file = new File([csvBlob], filename, { type: 'text/csv' });
+    
+    const shareData = {
+        files: [file],
+        title: `Relatório CD Nordestão - ${data.entregador}`,
+        text: `Segue o relatório de descarregamento (CSV).`
+    };
+
+    if (navigator.canShare(shareData)) {
+        try {
+            await navigator.share(shareData);
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                console.error('Erro ao compartilhar CSV:', error);
+                alert(`Erro ao compartilhar: ${error.message}`);
+            }
+        }
+    } else {
+         alert("Este navegador não pode compartilhar este arquivo CSV.");
+    }
+}
+
 
 /**
- * @description MODIFICADO: Inicia o download do relatório em formato PDF.
- * REQUER A BIBLIOTECA jsPDF
+ * @description (MODIFICADO) Inicia o download do relatório em formato PDF profissional.
  */
-function downloadReport() {
+function downloadPdfReport() {
     if (dischargedList.length === 0) {
         alert("Não há registros de descarregamento para gerar o relatório.");
         return;
     }
 
-    if (typeof jsPDF === 'undefined') {
-        alert("Erro: A biblioteca jsPDF não foi carregada. O download do PDF falhou.");
-        console.error("jsPDF não está definida. Adicione <script src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'></script> ao seu HTML.");
-        return;
-    }
+    const data = getReportData();
+    const doc = generateProfessionalPdf(data);
+    if (!doc) return; // Erro já foi alertado em generateProfessionalPdf
 
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    const reportText = generateReportText();
-    const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const filename = `Relatorio_CD_Nordestao_${date}.pdf`;
-
-    // Definir fonte monoespaçada para manter o alinhamento da tabela
-    doc.setFont("Courier", "normal");
-    doc.setFontSize(10);
-    
-    // Adiciona o texto (Margem de 10mm)
-    doc.text(reportText, 10, 10); 
+    const filename = `Relatorio_CD_Nordestao_${data.dataArquivo}.pdf`;
     
     // Salva o arquivo
     doc.save(filename);
@@ -499,7 +671,6 @@ document.addEventListener('DOMContentLoaded', () => {
             checkInputs(); // Checagem inicial
         }
     }
-    // O 'else' (lógica da câmera) foi removido.
 });
 
 
@@ -535,14 +706,19 @@ if (addDischargeBtn) {
     });
 }
 
-if (downloadReportBtn) {
-    downloadReportBtn.addEventListener('click', downloadReport);
+// ================== NOVOS EVENT LISTENERS ==================
+if (downloadPdfBtn) {
+    downloadPdfBtn.addEventListener('click', downloadPdfReport);
 }
 
-if (shareReportBtn) {
-    // Atualizado para chamar a nova função de compartilhamento de PDF
-    shareReportBtn.addEventListener('click', shareReport); 
+if (sharePdfBtn) {
+    sharePdfBtn.addEventListener('click', sharePdfReport); 
 }
+
+if (shareCsvBtn) {
+    shareCsvBtn.addEventListener('click', shareCsvReport);
+}
+// ===========================================================
 
 // Lógica para o botão de Reiniciar (Adicionado dinamicamente)
 if(targetInputSection) {
@@ -579,6 +755,9 @@ if(targetInputSection) {
         if (dischargeSummarySection) dischargeSummarySection.style.display = 'none';
         if (remainingSummarySection) remainingSummarySection.style.display = 'none';
         resetButton.style.display = 'none';
+        
+        // Garante que os botões de relatório sejam desabilitados
+        updateDischargeSummary();
     });
 
     targetInputSection.appendChild(resetButton);

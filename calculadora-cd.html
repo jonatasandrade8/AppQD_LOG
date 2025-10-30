@@ -100,19 +100,19 @@
                 <tbody id="discharge-list">
                     </tbody>
             </table>
+            
             <div class="report-buttons">
-                <button id="share-report-btn" class="action-btn primary-btn"><i class="fab fa-whatsapp"></i> Compartilhar WhatsApp</button>
-                <button id="download-report-btn" class="action-btn secondary-btn"><i class="fas fa-download"></i> Baixar Relatório</button>
+                <button id="share-pdf-btn" class="action-btn primary-btn" disabled><i class="fab fa-whatsapp"></i> Compartilhar PDF</button>
+                <button id="share-csv-btn" class="action-btn primary-btn" disabled><i class="fab fa-whatsapp"></i> Compartilhar CSV</button>
+                <button id="download-pdf-btn" class="action-btn secondary-btn" disabled><i class="fas fa-download"></i> Baixar PDF</button>
             </div>
-        </section>
+            </section>
 
 
 	        <section id="remaining-summary-section" class="calculator-section remaining-summary-box" style="display: none;">
 	            <h2>5. Falta para Concluir (Restante)</h2>
 	            
-	            <div id="status-message" class="status-box"></div> <!-- NOVO: Caixa de Status -->
-
-	            <div class="summary-info remaining-info">
+	            <div id="status-message" class="status-box"></div> <div class="summary-info remaining-info">
 	                <p><strong>KG Restantes:</strong> <span id="remaining-kg" class="missing-value">0.00</span> kg</p>
 	                <p><strong>Caixas Restantes:</strong> <span id="remaining-caixas" class="missing-value">0</span> caixas</p>
 	                <p><strong>Paletes Restantes:</strong> <span id="remaining-paletes" class="missing-value">0</span> paletes</p>
@@ -133,5 +133,6 @@
 
     <script src="./calculadora-cd.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-</body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    </body>
 </html>
