@@ -1,7 +1,3 @@
-// O arquivo APP_DATA e as funções utilitárias (menu, back-to-top, populateSelect, populateLoja) 
-// devem ser importadas de script.js ou replicadas aqui. 
-// Para manter a independência conforme solicitado, replico a estrutura e as funções necessárias.
-
 // ==================== ESTRUTURA DE DADOS (CÓPIA DE script.js) ====================
 const APP_DATA = {
     // Entregadores (lista independente)
@@ -70,8 +66,12 @@ const conferenceSummaryTableBody = conferenceSummarySection ? conferenceSummaryS
 const summaryConferente = document.getElementById('summary-conferente');
 const summaryRedeLoja = document.getElementById('summary-rede-loja');
 
-const downloadConferencePdfBtn = document.getElementById('download-conference-pdf-btn');
-const shareConferenceBtn = document.getElementById('share-conference-btn');
+// ================== NOVOS SELETORES DE BOTÃO ==================
+const downloadPdfBtn = document.getElementById('download-pdf-btn');
+const sharePdfBtn = document.getElementById('share-pdf-btn');
+const shareCsvBtn = document.getElementById('share-csv-btn');
+// ==============================================================
+
 const conferenceReportContent = document.getElementById('conference-report-content');
 const resetConferenceBtn = document.getElementById('reset-conference-btn');
 
@@ -268,6 +268,7 @@ function updateSummaryDisplay() {
     let totalNota = 0;
     let totalConferido = 0;
     let totalDiferenca = 0;
+    let hasData = false;
 
     // 2. Preenche a tabela
     APP_DATA.PRODUTOS_CONFERENCIA.forEach(produto => {
@@ -276,6 +277,7 @@ function updateSummaryDisplay() {
         
         // Exibe apenas produtos com KG na nota ou já conferidos (após o início)
         if (notaKg > 0 || (conferenceInputSection.style.display === 'block' && conferidoKg > 0)) {
+            hasData = true;
             const diferenca = conferidoKg - notaKg;
             const statusText = diferenca === 0 ? 'OK' : (diferenca < 0 ? 'Falta' : 'Sobra');
             const statusClass = diferenca === 0 ? 'status-ok' : (diferenca < 0 ? 'status-missing' : 'status-excess');
@@ -315,106 +317,276 @@ function updateSummaryDisplay() {
         
         totalRow.insertCell().textContent = totalDiferenca === 0 ? 'OK' : (totalDiferenca < 0 ? 'FALTA' : 'SOBRA');
     }
-}
-
-
-/**
- * @description Converte o conteúdo do relatório para PDF e inicia o download.
- */
-function downloadConferenceReportPDF() {
-    if (!conferenceReportContent || typeof html2canvas === 'undefined' || typeof jspdf === 'undefined') {
-        alert("Erro: Bibliotecas de PDF não carregadas ou conteúdo não encontrado. O PDF requer html2canvas e jspdf.");
-        return;
-    }
-
-    const title = 'Relatório de Conferência';
-    const conferente = summaryConferente.textContent;
-    const redeLoja = summaryRedeLoja.textContent;
-    const filename = `Conferencia_${redeLoja.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`;
-
-    // 1. Clonar o conteúdo para renderizar corretamente
-    const clone = conferenceReportContent.cloneNode(true);
-    clone.style.maxWidth = '800px'; 
-    clone.style.margin = '0 auto';
-    clone.style.padding = '20px';
-    clone.style.backgroundColor = '#fff';
-    document.body.appendChild(clone);
-
-    // 2. Usar html2canvas para renderizar o HTML em uma imagem
-    html2canvas(clone, {
-        scale: 2, 
-        logging: false,
-        useCORS: true 
-    }).then(canvas => {
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jspdf.jsPDF({
-            orientation: 'p',
-            unit: 'mm',
-            format: 'a4'
-        });
-        const imgProps= pdf.getImageProperties(imgData);
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-        
-        // Adiciona um título ao topo
-        pdf.setFontSize(16);
-        pdf.text(title, 105, 15, null, null, "center");
-
-        // Adiciona a imagem/canvas ao PDF
-        pdf.addImage(imgData, 'PNG', 10, 20, pdfWidth - 20, pdfHeight); 
-
-        // 3. Inicia o download
-        pdf.save(filename);
-
-        // Remove o clone
-        document.body.removeChild(clone);
-    }).catch(error => {
-        console.error('Erro na geração do PDF:', error);
-        alert('Erro ao gerar o PDF. Verifique o console para detalhes.');
-        document.body.removeChild(clone); 
-    });
-}
-
-/**
- * @description Compartilha um resumo do relatório via WhatsApp.
- */
-function shareConferenceWhatsApp() {
-    const conferente = summaryConferente.textContent;
-    const redeLoja = summaryRedeLoja.textContent;
     
-    let message = `*Relatório de Conferência - Qdelícia*\n`;
-    message += `*Conferente:* ${conferente}\n`;
-    message += `*Rede/Loja:* ${redeLoja}\n\n`;
-    message += `*Detalhes da Conferência:*\n`;
+    // 4. Habilita/Desabilita botões de relatório
+    if (downloadPdfBtn) downloadPdfBtn.disabled = !hasData;
+    if (sharePdfBtn) sharePdfBtn.disabled = !hasData;
+    if (shareCsvBtn) shareCsvBtn.disabled = !hasData;
+}
 
+// -----------------------------------------------------------------
+// 3. (NOVA) Lógica de Relatório (PDF c/ AutoTable e CSV)
+// -----------------------------------------------------------------
+
+/**
+ * @description Coleta todos os dados do relatório em um objeto estruturado.
+ * @returns {object} Um objeto contendo todos os dados para os relatórios.
+ */
+function getConferenceReportData() {
+    const date = new Date();
     let totalNota = 0;
     let totalConferido = 0;
-
+    
+    const detalhes = [];
     APP_DATA.PRODUTOS_CONFERENCIA.forEach(produto => {
         const notaKg = parseFloat(notaQuantities[produto]) || 0;
         const conferidoKg = parseFloat(conferenceEntries[produto]) || 0;
-        const diferenca = conferidoKg - notaKg;
-
-        if (notaKg > 0) {
-            message += `- ${produto}:\n`;
-            message += `  > Nota: ${notaKg.toFixed(2)} kg\n`;
-            message += `  > Conf: ${conferidoKg.toFixed(2)} kg\n`;
-            message += `  > Dif: ${diferenca.toFixed(2)} kg\n`;
+        
+        if (notaKg > 0 || conferidoKg > 0) {
+            const diferenca = conferidoKg - notaKg;
+            const status = diferenca === 0 ? 'OK' : (diferenca < 0 ? 'Falta' : 'Sobra');
+            
+            detalhes.push({
+                produto: produto,
+                notaKg: notaKg,
+                conferidoKg: conferidoKg,
+                diferenca: diferenca,
+                status: status
+            });
             
             totalNota += notaKg;
             totalConferido += conferidoKg;
         }
     });
-
+    
     const totalDiferenca = totalConferido - totalNota;
     
-    message += `\n*RESUMO GERAL (KG):*\n`;
-    message += `*Total Nota:* ${totalNota.toFixed(2)} kg\n`;
-    message += `*Total Conferido:* ${totalConferido.toFixed(2)} kg\n`;
-    message += `*Diferença Final:* ${totalDiferenca.toFixed(2)} kg\n`;
+    return {
+        conferente: selectConferente.value,
+        rede: selectRede.value,
+        loja: selectLoja.value,
+        dataGeracao: date.toLocaleString('pt-BR'),
+        dataArquivo: date.toISOString().slice(0, 10).replace(/-/g, ''),
+        
+        detalhes: detalhes, // Array de objetos para a tabela
+        
+        resumo: {
+            totalNota: totalNota,
+            totalConferido: totalConferido,
+            totalDiferenca: totalDiferenca
+        }
+    };
+}
 
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
+/**
+ * @description (NOVO) Gera um objeto jsPDF profissional com AutoTable.
+ * @param {object} data - O objeto de dados da função getConferenceReportData()
+ * @returns {object} O objeto 'doc' do jsPDF.
+ */
+function generateConferencePdf(data) {
+    if (typeof jsPDF === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
+        alert("Erro: A biblioteca jsPDF não foi carregada.");
+        return null;
+    }
+    if (typeof window.jspdf.plugin.autotable === 'undefined') {
+         alert("Erro: A biblioteca jsPDF-AutoTable não foi carregada.");
+        return null;
+    }
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    let startY = 20;
+
+    // === CABEÇALHO ===
+    doc.setFontSize(18);
+    doc.setFont(undefined, 'bold');
+    doc.text("Relatório de Conferência", doc.internal.pageSize.getWidth() / 2, startY, { align: 'center' });
+    startY += 8;
+    
+    doc.setFontSize(11);
+    doc.setFont(undefined, 'normal');
+    doc.text(`Qdelícia Frutas - Gerado em: ${data.dataGeracao}`, doc.internal.pageSize.getWidth() / 2, startY, { align: 'center' });
+    startY += 12;
+
+    doc.setFontSize(10);
+    doc.text(`Conferente: ${data.conferente}`, 14, startY);
+    doc.text(`Rede/Loja: ${data.rede} / ${data.loja}`, 14, startY + 6);
+    startY += 16;
+
+    // === TABELA DE DETALHES ===
+    const tableHead = [['Produto', 'KG Nota', 'KG Conferido', 'Diferença (KG)', 'Status']];
+    const tableBody = data.detalhes.map(item => [
+        item.produto,
+        item.notaKg.toFixed(2),
+        item.conferidoKg.toFixed(2),
+        item.diferenca.toFixed(2),
+        item.status
+    ]);
+
+    // === LINHA DE TOTAL PARA A TABELA ===
+    tableBody.push([
+        { content: 'TOTAL', colSpan: 1, styles: { fontStyle: 'bold' } },
+        { content: data.resumo.totalNota.toFixed(2), styles: { fontStyle: 'bold' } },
+        { content: data.resumo.totalConferido.toFixed(2), styles: { fontStyle: 'bold' } },
+        { content: data.resumo.totalDiferenca.toFixed(2), styles: { fontStyle: 'bold' } },
+        { content: data.resumo.totalDiferenca === 0 ? 'OK' : (data.resumo.totalDiferenca < 0 ? 'FALTA' : 'SOBRA'), styles: { fontStyle: 'bold' } }
+    ]);
+
+    doc.autoTable({
+        head: tableHead,
+        body: tableBody,
+        startY: startY,
+        theme: 'striped',
+        headStyles: { fillColor: [93, 63, 211], textColor: 255, fontStyle: 'bold' }, // Cor primária
+        didParseCell: function (hookData) {
+            // Colore as células de Diferença e Status
+            if (hookData.section === 'body') {
+                const cellValue = hookData.cell.raw;
+                if (hookData.column.dataKey === 3) { // Coluna Diferença (KG)
+                    const numValue = parseFloat(cellValue);
+                    if (numValue < 0) hookData.cell.styles.textColor = [211, 63, 63]; // Vermelho (Falta)
+                    if (numValue > 0) hookData.cell.styles.textColor = [255, 152, 0]; // Laranja (Sobra)
+                }
+                if (hookData.column.dataKey === 4) { // Coluna Status
+                    if (cellValue === 'Falta') hookData.cell.styles.textColor = [211, 63, 63];
+                    if (cellValue === 'Sobra') hookData.cell.styles.textColor = [255, 152, 0];
+                    if (cellValue === 'OK') hookData.cell.styles.textColor = [37, 211, 102]; // Verde
+                }
+            }
+        }
+    });
+    
+    return doc;
+}
+
+/**
+ * @description (NOVO) Gera o texto para um arquivo CSV.
+ * @param {object} data - O objeto de dados da função getConferenceReportData()
+ * @returns {string} O texto formatado em CSV.
+ */
+function generateConferenceCsv(data) {
+    const separator = ';';
+    const eol = '\r\n';
+
+    let csv = `RELATORIO DE CONFERENCIA - QDELICIA FRUTAS${eol}`;
+    csv += `Conferente${separator}${data.conferente}${eol}`;
+    csv += `Rede/Loja${separator}${data.rede} / ${data.loja}${eol}`;
+    csv += `Data Geracao${separator}${data.dataGeracao}${eol}`;
+    csv += `${eol}`;
+
+    // Cabeçalho da Tabela
+    csv += `Produto${separator}KG Nota${separator}KG Conferido${separator}Diferenca (KG)${separator}Status${eol}`;
+    
+    // Linhas da Tabela
+    data.detalhes.forEach(item => {
+        csv += `${item.produto}${separator}${item.notaKg.toFixed(2)}${separator}${item.conferidoKg.toFixed(2)}${separator}${item.diferenca.toFixed(2)}${separator}${item.status}${eol}`;
+    });
+    
+    // Linha de Total
+    csv += `${eol}`;
+    csv += `TOTAL${separator}${data.resumo.totalNota.toFixed(2)}${separator}${data.resumo.totalConferido.toFixed(2)}${separator}${data.resumo.totalDiferenca.toFixed(2)}${eol}`;
+    
+    return csv;
+}
+	
+/**
+ * @description (NOVO) Compartilha o relatório em PDF (via Web Share API).
+ */
+async function sharePdfReport() {
+    const data = getConferenceReportData();
+    if (data.detalhes.length === 0) {
+        alert("Não há dados de conferência para compartilhar.");
+        return;
+    }
+
+    const doc = generateConferencePdf(data);
+    if (!doc) return; 
+
+    if (!navigator.share || !navigator.canShare) {
+        alert("A função de compartilhamento de arquivos não é suportada por este navegador. Tente usar o botão 'Baixar PDF'.");
+        return;
+    }
+
+    const filename = `Conferencia_${data.rede.replace(/ /g, '_')}_${data.dataArquivo}.pdf`;
+    const pdfBlob = doc.output('blob');
+    const file = new File([pdfBlob], filename, { type: 'application/pdf' });
+    
+    const shareData = {
+        files: [file],
+        title: `Relatório Conferência - ${data.conferente}`,
+        text: `Segue o relatório de conferência (PDF).`
+    };
+
+    if (navigator.canShare(shareData)) {
+        try {
+            await navigator.share(shareData);
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                console.error('Erro ao compartilhar PDF:', error);
+                alert(`Erro ao compartilhar: ${error.message}\n\Tente baixar o relatório e compartilhar manualmente.`);
+            }
+        }
+    } else {
+         alert("Este navegador não pode compartilhar este arquivo PDF. Tente baixar e compartilhar manualmente.");
+    }
+}
+
+/**
+ * @description (NOVO) Compartilha o relatório em CSV (via Web Share API).
+ */
+async function shareCsvReport() {
+    const data = getConferenceReportData();
+     if (data.detalhes.length === 0) {
+        alert("Não há dados de conferência para compartilhar.");
+        return;
+    }
+
+    if (!navigator.share || !navigator.canShare) {
+        alert("A função de compartilhamento de arquivos não é suportada por este navegador.");
+        return;
+    }
+
+    const csvText = generateConferenceCsv(data);
+    const filename = `Conferencia_${data.rede.replace(/ /g, '_')}_${data.dataArquivo}.csv`;
+    const csvBlob = new Blob([csvText], { type: 'text/csv;charset=utf-8;' });
+    const file = new File([csvBlob], filename, { type: 'text/csv' });
+    
+    const shareData = {
+        files: [file],
+        title: `Relatório Conferência - ${data.conferente}`,
+        text: `Segue o relatório de conferência (CSV).`
+    };
+
+    if (navigator.canShare(shareData)) {
+        try {
+            await navigator.share(shareData);
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                console.error('Erro ao compartilhar CSV:', error);
+                alert(`Erro ao compartilhar: ${error.message}`);
+            }
+        }
+    } else {
+         alert("Este navegador não pode compartilhar este arquivo CSV.");
+    }
+}
+
+
+/**
+ * @description (NOVO) Inicia o download do relatório em formato PDF profissional.
+ */
+function downloadPdfReport() {
+    const data = getConferenceReportData();
+     if (data.detalhes.length === 0) {
+        alert("Não há dados de conferência para gerar o relatório.");
+        return;
+    }
+
+    const doc = generateConferencePdf(data);
+    if (!doc) return; 
+
+    const filename = `Conferencia_${data.rede.replace(/ /g, '_')}_${data.dataArquivo}.pdf`;
+    doc.save(filename);
 }
 
 /**
@@ -429,6 +601,15 @@ function resetConference() {
     document.querySelectorAll('#nota-input-section input, #user-info-section select').forEach(el => el.disabled = false);
     document.querySelectorAll('#nota-input-section input').forEach(input => input.value = '');
     
+    // Reseta selects de usuário
+    if (selectConferente) selectConferente.value = '';
+    if (selectRede) selectRede.value = '';
+    if (selectLoja) {
+        selectLoja.value = '';
+        selectLoja.innerHTML = '<option value="" disabled selected>Selecione a Loja/PDV</option>';
+        selectLoja.disabled = true;
+    }
+    
     startConferenceBtn.style.display = 'block';
     startConferenceBtn.textContent = 'Iniciar Conferência';
     conferenceInputSection.style.display = 'none';
@@ -436,8 +617,10 @@ function resetConference() {
     
     if (conferenceSummaryTableBody) conferenceSummaryTableBody.innerHTML = '';
     
-    // 3. Força a verificação
+    // 3. Limpa LocalStorage e força verificação
+    localStorage.removeItem(localStorageKeyConference);
     checkStartConferenceButton();
+    updateSummaryDisplay(); // Para desabilitar os botões
 }
 
 // ==================== INICIALIZAÇÃO E LISTENERS ====================
@@ -460,10 +643,12 @@ if (selectProductConference) selectProductConference.addEventListener('change', 
     addConferenceBtn.disabled = !selectProductConference.value || parseFloat(inputKgConference.value) <= 0;
 });
 
-// Listeners de Relatório
-if (downloadConferencePdfBtn) downloadConferencePdfBtn.addEventListener('click', downloadConferenceReportPDF);
-if (shareConferenceBtn) shareConferenceBtn.addEventListener('click', shareConferenceWhatsApp);
+// ================== NOVOS EVENT LISTENERS DE RELATÓRIO ==================
+if (downloadPdfBtn) downloadPdfBtn.addEventListener('click', downloadPdfReport);
+if (sharePdfBtn) sharePdfBtn.addEventListener('click', sharePdfReport);
+if (shareCsvBtn) shareCsvBtn.addEventListener('click', shareCsvReport);
 if (resetConferenceBtn) resetConferenceBtn.addEventListener('click', resetConference);
+// ======================================================================
 
 
 // Inicia o processo

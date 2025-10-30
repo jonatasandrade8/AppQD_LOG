@@ -9,12 +9,10 @@
     <link rel="stylesheet" href="./style.css"> 
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
-</head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    </head>
 <style>
-    /* ... (Seu código anterior do style.css) ... */
-
+ 
 /* ===================== ESTILIZAÇÃO PARA TABELAS (CALCULADORA CD E CONFERÊNCIA) ===================== */
 
 /* ... (Estilos de tabela existentes) ... */
@@ -187,7 +185,8 @@
         <section id="conference-summary-section" class="calculator-section summary-box" style="display: none;">
             <h2>4. Resumo e Diferença</h2>
             
-            <div id="conference-report-content"> <p class="summary-info"><strong>Conferente:</strong> <span id="summary-conferente"></span></p>
+            <div id="conference-report-content"> 
+                <p class="summary-info"><strong>Conferente:</strong> <span id="summary-conferente"></span></p>
                 <p class="summary-info"><strong>Rede/Loja:</strong> <span id="summary-rede-loja"></span></p>
 
                 <h3>Detalhamento (Nota vs. Conferido)</h3>
@@ -207,11 +206,12 @@
             </div>
 
             <div class="report-buttons">
-                <button id="share-conference-btn" class="action-btn primary-btn"><i class="fab fa-whatsapp"></i> Compartilhar Resumo</button>
-                <button id="download-conference-pdf-btn" class="action-btn secondary-btn"><i class="fas fa-file-pdf"></i> Baixar Relatório PDF</button>
+                <button id="share-pdf-btn" class="action-btn primary-btn"><i class="fab fa-whatsapp"></i> Compartilhar PDF</button>
+                <button id="share-csv-btn" class="action-btn primary-btn"><i class="fab fa-whatsapp"></i> Compartilhar CSV</button>
+                <button id="download-pdf-btn" class="action-btn secondary-btn"><i class="fas fa-file-pdf"></i> Baixar PDF</button>
             </div>
             <button id="reset-conference-btn" class="action-btn secondary-btn" style="margin-top: 10px;">Reiniciar Conferência</button>
-        </section>
+            </section>
 
     </main>
     
