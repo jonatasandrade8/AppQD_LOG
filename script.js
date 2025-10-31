@@ -32,363 +32,179 @@ const APP_DATA = {
     MOTIVOS_DEVOLUCAO: [
         "Maturação elevada",
         "Atraso na Entrega",
-        "Qualidade baixa",
-        "Peso alt.",
+        "Volume incorreto",
+        "Avaria no transporte",
+        "Produto Reprovado - Qualidade",
         "Outro Motivo"
-    ],
-    
-    TIPOS_PRODUTO: [
-        "Prata",
-        "Pacovan",
-        "Comprida",
-        "Leite",
-        "Nanica",
-        "Goiaba",
-        "Abacaxi",
-        "TUDO"
     ],
 };
 
+// ==================== VARIÁVEIS DE ESTADO ====================
+let photos = JSON.parse(localStorage.getItem('qdelicia_photos_geral')) || [];
+let currentStream = null;
+let usingFrontCamera = true; // Inicia com a câmera frontal (user)
+const maxPhotos = 10;
+let lastSelectedEntregador = localStorage.getItem('lastSelectedEntregador') || '';
+let lastSelectedRede = localStorage.getItem('lastSelectedRede') || '';
+let lastSelectedLoja = localStorage.getItem('lastSelectedLoja') || '';
+let lastSelectedStatus = localStorage.getItem('lastSelectedStatus') || '';
 
-// ================= MENU HAMBÚRGUER e VOLTAR AO TOPO =================
-const menuToggle = document.querySelector('.menu-toggle');
-const sideMenu = document.querySelector('.side-menu');
-const menuOverlay = document.querySelector('.menu-overlay');
+// ==================== SELETORES DE ELEMENTOS ====================
+// Inputs de Informação
+const selectEntregador = document.getElementById('select-entregador');
+const selectRede = document.getElementById('select-rede');
+const selectLoja = document.getElementById('select-loja');
+const selectStatus = document.getElementById('select-status');
 
-if (menuToggle && sideMenu && menuOverlay) {
-    menuToggle.addEventListener('click', () => {
-        sideMenu.classList.toggle('active');
-        menuOverlay.classList.toggle('active');
-    });
-
-    menuOverlay.addEventListener('click', () => {
-        sideMenu.classList.remove('active');
-        menuOverlay.classList.remove('active');
-    });
-    
-    sideMenu.querySelectorAll('a').forEach(link => {
-        link.addEventListener('click', () => {
-            sideMenu.classList.remove('active');
-            menuOverlay.classList.remove('active');
-        });
-    });
-}
-
-const backToTop = document.querySelector('.back-to-top');
-
-if (backToTop) {
-    window.addEventListener('scroll', () => {
-        if (window.scrollY > 300) {
-            backToTop.classList.add('show');
-        } else {
-            backToTop.classList.remove('show');
-        }
-    });
-
-    backToTop.addEventListener('click', () => {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
-}
-
-
-// ==================== FUNCIONALIDADES DA CÂMERA E VÍDEO ====================
-
-// Elementos da Interface (Comuns)
+// Botões da Galeria/Ações
 const openCameraBtn = document.getElementById('open-camera-btn');
-const fullscreenCameraContainer = document.getElementById('fullscreen-camera-container');
-const backToGalleryBtn = document.getElementById('back-to-gallery-btn');
-const video = document.getElementById('video');
-const shutterBtn = document.getElementById('shutter-btn');
-const switchBtn = document.getElementById('switch-btn');
-const dateTimeElement = document.getElementById('date-time');
-const photoList = document.getElementById('photo-list');
+const photoListContainer = document.getElementById('photo-list');
 const downloadAllBtn = document.getElementById('download-all');
 const shareAllBtn = document.getElementById('share-all');
-const photoCountElement = document.getElementById('photo-count');
 
-// Elementos para Marca D'água
-const selectEntregador = document.getElementById('select-entregador'); 
-const selectRede = document.getElementById('select-rede'); 
-const selectLoja = document.getElementById('select-loja'); 
-const selectStatus = document.getElementById('select-status'); 
+// Elementos da Câmera
+const videoElement = document.getElementById('video');
+const cameraContainer = document.getElementById('fullscreen-camera-container');
+const shutterBtn = document.getElementById('shutter-btn');
+const backToGalleryBtn = document.getElementById('back-to-gallery-btn');
+const switchBtn = document.getElementById('switch-btn');
+const dateTimeDisplay = document.getElementById('date-time');
+const photoCountDisplay = document.getElementById('photo-count');
 
-// Elementos Específicos da Câmera de Devolução
-const selectMotivo = document.getElementById('select-motivo'); 
-const selectProduto = document.getElementById('select-produto'); 
-const inputQuantidade = document.getElementById('input-quantidade'); 
+// ==================== PERSISTÊNCIA E POPULAÇÃO DE DROPDOWNS ====================
 
-let currentStream = null;
-let usingFrontCamera = false;
-let photos = [];
-const isDevolucaoPage = !!selectMotivo; 
-const localStorageKey = 'qdelicia_logistica_last_selection'; 
-
-// Carregar a imagem da logomarca
-const logoImage = new Image();
-logoImage.src = './images/logo-qdelicia.png'; 
-logoImage.onerror = () => console.error("Erro ao carregar a imagem da logomarca. Verifique o caminho.");
-
-
-// --- LÓGICA DE DROP DOWNS, PERSISTÊNCIA E VALIDAÇÃO ---
-
-function saveSelection() {
-    const selection = {
-        entregador: selectEntregador ? selectEntregador.value : '',
-        rede: selectRede ? selectRede.value : '',
-        loja: selectLoja ? selectLoja.value : '',
-        status: selectStatus ? selectStatus.value : '', 
-        motivo: selectMotivo ? selectMotivo.value : '',
-        produto: selectProduto ? selectProduto.value : '',
-        quantidade: inputQuantidade ? inputQuantidade.value : '' 
-    };
-    localStorage.setItem(localStorageKey, JSON.stringify(selection));
-    checkCameraAccess();
-}
-
-function populateSelect(selectElement, data, placeholder) {
-    if (!selectElement) return;
-    selectElement.innerHTML = `<option value="" disabled selected>${placeholder}</option>`;
-    
-    const isArray = Array.isArray(data);
-    const iterableData = isArray ? data : Object.keys(data);
-    
-    iterableData.forEach(itemKey => {
-        const itemValue = isArray ? itemKey : itemKey; 
-        const option = document.createElement('option');
-        option.value = itemValue;
-        option.textContent = itemValue;
-        selectElement.appendChild(option);
-    });
-}
-
-function populateLoja(rede) {
-    if (!selectLoja) return;
-
-    selectLoja.innerHTML = '<option value="" disabled selected>Selecione a Loja/PDV</option>';
-
-    if (rede && APP_DATA.REDES_LOJAS[rede]) {
-        APP_DATA.REDES_LOJAS[rede].forEach(loja => {
-            const option = document.createElement('option');
-            option.value = loja;
-            option.textContent = loja;
-            selectLoja.appendChild(option);
-        });
-        selectLoja.disabled = false;
-    } else {
-        selectLoja.disabled = true;
-    }
+function saveLastSelections() {
+    localStorage.setItem('lastSelectedEntregador', selectEntregador ? selectEntregador.value : '');
+    localStorage.setItem('lastSelectedRede', selectRede ? selectRede.value : '');
+    localStorage.setItem('lastSelectedLoja', selectLoja ? selectLoja.value : '');
+    localStorage.setItem('lastSelectedStatus', selectStatus ? selectStatus.value : '');
 }
 
 function loadAndPopulateDropdowns() {
-    populateSelect(selectEntregador, APP_DATA.ENTREGADORES, "Selecione o Entregador");
-    populateSelect(selectStatus, APP_DATA.STATUS, "Selecione o Status");
-    populateSelect(selectRede, APP_DATA.REDES_LOJAS, "Selecione a Rede/Cliente");
-    if (selectLoja) {
-           selectLoja.innerHTML = '<option value="" disabled selected>Selecione a Loja/PDV</option>';
-           selectLoja.disabled = true;
+    if (selectEntregador) {
+        APP_DATA.ENTREGADORES.forEach(entregador => {
+            const option = new Option(entregador, entregador);
+            selectEntregador.add(option);
+        });
+        selectEntregador.value = lastSelectedEntregador;
     }
 
-    if (isDevolucaoPage) {
-        populateSelect(selectMotivo, APP_DATA.MOTIVOS_DEVOLUCAO, "Selecione o Motivo");
-        populateSelect(selectProduto, APP_DATA.TIPOS_PRODUTO, "Selecione o Produto");
+    if (selectRede) {
+        Object.keys(APP_DATA.REDES_LOJAS).forEach(rede => {
+            const option = new Option(rede, rede);
+            selectRede.add(option);
+        });
+        selectRede.value = lastSelectedRede;
     }
 
-    const savedSelection = JSON.parse(localStorage.getItem(localStorageKey));
+    if (selectStatus) {
+        APP_DATA.STATUS.forEach(status => {
+            const option = new Option(status, status);
+            selectStatus.add(option);
+            
+        });
+        selectStatus.value = lastSelectedStatus;
+    }
 
-    if (savedSelection) {
-        if (selectEntregador && savedSelection.entregador) selectEntregador.value = savedSelection.entregador;
-        if (selectStatus && savedSelection.status) selectStatus.value = savedSelection.status; 
+    // A população da Loja depende da Rede
+    if (selectRede) {
+        selectRede.addEventListener('change', populateLojas);
+    }
+    populateLojas(); // Inicializa as lojas com base no valor carregado
 
-        if (selectRede && savedSelection.rede) {
-            selectRede.value = savedSelection.rede;
-            populateLoja(savedSelection.rede); 
-            if (selectLoja && savedSelection.loja) selectLoja.value = savedSelection.loja;
+    // Adiciona listener para salvar as seleções e revalidar o botão da câmera
+    [selectEntregador, selectRede, selectLoja, selectStatus].forEach(select => {
+        if (select) {
+            select.addEventListener('change', () => {
+                saveLastSelections();
+                updateCameraButtonState();
+            });
         }
-        
-        if (isDevolucaoPage) {
-            if (selectMotivo && savedSelection.motivo) selectMotivo.value = savedSelection.motivo;
-            if (selectProduto && savedSelection.produto) selectProduto.value = savedSelection.produto;
-            if (inputQuantidade && savedSelection.quantidade) inputQuantidade.value = savedSelection.quantidade; 
-        }
-    }
-    
-    checkCameraAccess();
+    });
+
+    updateCameraButtonState();
 }
+
+function populateLojas() {
+    if (selectLoja && selectRede) {
+        selectLoja.innerHTML = '<option value="" disabled selected>Selecione a Loja</option>'; // Limpa e adiciona o placeholder
+        const selectedRede = selectRede.value;
+        const lojas = APP_DATA.REDES_LOJAS[selectedRede] || [];
+        
+        lojas.forEach(loja => {
+            const option = new Option(loja, loja);
+            selectLoja.add(option);
+        });
+
+        // Tenta selecionar o último valor salvo ou volta para o placeholder
+        if (lojas.includes(lastSelectedLoja)) {
+            selectLoja.value = lastSelectedLoja;
+        } else {
+            selectLoja.value = '';
+        }
+    }
+}
+
+function isFormValid() {
+    const entregador = selectEntregador ? selectEntregador.value : '';
+    const rede = selectRede ? selectRede.value : '';
+    const loja = selectLoja ? selectLoja.value : '';
+    const status = selectStatus ? selectStatus.value : '';
+    
+    return !!entregador && !!rede && !!loja && !!status;
+}
+
+function updateCameraButtonState() {
+    if (openCameraBtn) {
+        openCameraBtn.disabled = !isFormValid();
+        openCameraBtn.textContent = isFormValid() ? 'Abrir Câmera' : 'Preencha todos os campos para habilitar a câmera';
+    }
+}
+
+// ==================== CÂMERA: FUNÇÕES DE HARDWARE ====================
 
 function checkCameraAccess() {
-    let isReady = false;
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert("Desculpe, seu navegador não suporta acesso à câmera.");
+        return false;
+    }
+    return true;
+}
 
-    const baseFieldsReady = selectEntregador && selectEntregador.value && 
-                            selectRede && selectRede.value && 
-                            selectLoja && selectLoja.value;
+async function startCamera(facingMode) {
+    if (!videoElement || !cameraContainer) return;
     
-    const statusReady = selectStatus && selectStatus.value;
-    const quantidadeReady = inputQuantidade && inputQuantidade.value.trim() !== '';
-
-    if (isDevolucaoPage) {
-        const devFieldsReady = selectMotivo && selectMotivo.value &&
-                               selectProduto && selectProduto.value &&
-                               quantidadeReady;
-        isReady = baseFieldsReady && devFieldsReady;
-
-    } else {
-        isReady = baseFieldsReady && statusReady;
+    // Esconde o botão de trocar de câmera se não tiver suporte ou for ambiente de desenvolvimento
+    if (switchBtn) {
+        // Assume que em mobiles modernos 'environment' é suportado
+        switchBtn.style.display = facingMode === 'environment' || facingMode === 'user' ? 'block' : 'none';
     }
 
-    if (openCameraBtn) {
-        if (isReady) {
-            openCameraBtn.disabled = false;
-            openCameraBtn.innerHTML = currentStream 
-                ? '<i class="fas fa-video"></i> Câmera Aberta (Clique para Fechar)' 
-                : '<i class="fas fa-video"></i> Abrir Câmera'; 
-        } else {
-            openCameraBtn.disabled = true;
-            openCameraBtn.innerHTML = '<i class="fas fa-lock"></i> Preencha as Informações Acima';
-        }
-    }
-    return isReady;
-}
-
-// EVENT LISTENERS para os Dropdowns
-if (selectEntregador) selectEntregador.addEventListener('change', saveSelection);
-if (selectStatus) selectStatus.addEventListener('change', saveSelection); 
-if (selectRede) {
-    selectRede.addEventListener('change', () => {
-        populateLoja(selectRede.value);
-        saveSelection();
-    });
-}
-if (selectLoja) selectLoja.addEventListener('change', saveSelection);
-
-if (isDevolucaoPage) {
-    if (selectMotivo) selectMotivo.addEventListener('change', saveSelection);
-    if (selectProduto) selectProduto.addEventListener('change', saveSelection);
-    if (inputQuantidade) inputQuantidade.addEventListener('input', saveSelection); 
-}
-
-
-// --- LÓGICA DA CÂMERA (Marca d'água) ---
-
-function drawWatermark(canvas, ctx) {
-    const entregador = selectEntregador ? selectEntregador.value || 'N/A' : 'N/A';
-    const rede = selectRede ? selectRede.value || 'N/A' : 'N/A';
-    const loja = selectLoja ? selectLoja.value || 'N/A' : 'N/A';
-    const status = selectStatus && selectStatus.value ? selectStatus.value.toUpperCase() : null;
-
-    const date = new Date();
-    const dateTimeText = date.toLocaleDateString('pt-BR', {
-        day: '2-digit', month: '2-digit', year: 'numeric',
-        hour: '2-digit', minute: '2-digit', second: '2-digit'
-    });
-    
-    const lines = [];
-    lines.push(`${dateTimeText}`);
-    lines.push(`Entregador: ${entregador}`);
-    lines.push(`Rede: ${rede} || Loja: ${loja}`);
-
-    if (!isDevolucaoPage) {
-        lines.push(`STATUS: ${status || 'N/A'}`);
-    } else {
-        const motivo = selectMotivo ? selectMotivo.value || 'N/A' : 'N/A';
-        const produto = selectProduto ? selectProduto.value || 'N/A' : 'N/A';
-        const quantidade = inputQuantidade ? inputQuantidade.value.trim() : 'N/A';
+    try {
+        if (currentStream) stopCamera(); // Garante que a câmera anterior seja parada
         
-        lines.push(`Motivo: ${motivo}`);
-        lines.push(`Produto: ${produto} || QTD: ${quantidade} KG`);
-    }
-    
-    // Configurações de Posição
-    const baseFontSize = canvas.height / 50; 
-    const lineHeight = baseFontSize * 1.3;
-    const margin = canvas.width / 50;
-    const padding = baseFontSize * 0.5;
-
-    ctx.font = `600 ${baseFontSize}px Arial, sans-serif`; 
-    ctx.textAlign = 'right';
-
-    let maxWidth = 0;
-    lines.forEach(line => {
-        const width = ctx.measureText(line).width;
-        if (width > maxWidth) maxWidth = width;
-    });
-
-    const rectWidth = maxWidth + 2 * padding;
-    const rectHeight = (lines.length * lineHeight) + padding;
-    
-    const xText = canvas.width - margin; 
-    const yBottomBaseline = canvas.height - margin; 
-    const xRect = xText - rectWidth;
-    const yRect = yBottomBaseline - rectHeight;
-
-    // Fundo do texto
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'; 
-    ctx.fillRect(xRect, yRect, rectWidth, rectHeight);
-
-
-    // Desenha o texto
-    ctx.fillStyle = 'rgba(255, 255, 255, 1)'; 
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.9)'; 
-    ctx.lineWidth = 2; 
-
-    let yText = yBottomBaseline - padding; 
-
-    lines.reverse().forEach(line => {
-        ctx.strokeText(line, xText - padding, yText);
-        ctx.fillText(line, xText - padding, yText);
-        yText -= lineHeight; 
-    });
-
-
-    // Logomarca (Canto Superior Esquerdo)
-    const logoHeight = canvas.height / 8; 
-    const logoWidth = (logoImage.width / logoImage.height) * logoHeight;
-    const xLogo = margin;
-    const yLogo = margin;
-
-    const logoBgPadding = baseFontSize * 0.5;
-    const logoBgWidth = logoWidth + 2 * logoBgPadding;
-    const logoBgHeight = logoHeight + 2 * logoBgPadding;
-    
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'; 
-    ctx.fillRect(xLogo - logoBgPadding, yLogo - logoBgPadding, logoBgWidth, logoBgHeight);
-
-    if (logoImage.complete && logoImage.naturalHeight !== 0) {
-        ctx.drawImage(logoImage, xLogo, yLogo, logoWidth, logoHeight);
-    }
-}
-
-
-function startCamera(facingMode = 'environment') {
-    if (currentStream) stopCamera(); 
-
-    const constraints = {
-        video: {
-            facingMode: facingMode,
-            width: { ideal: 1920 },
-            height: { ideal: 1080 }
-        }
-    };
-
-    navigator.mediaDevices.getUserMedia(constraints)
-        .then(stream => {
-            currentStream = stream;
-            video.srcObject = stream;
-            video.play();
-            checkCameraAccess(); 
-            if (fullscreenCameraContainer) {
-                fullscreenCameraContainer.style.display = 'flex';
-                updateDateTimeWatermark(); 
+        const constraints = {
+            video: {
+                facingMode: facingMode,
+                width: { ideal: 1280 }, // Tenta alta resolução para o canvas
+                height: { ideal: 720 }
             }
-        })
-        .catch(err => {
-            console.error("Erro ao acessar a câmera: ", err);
-            currentStream = null; 
-            checkCameraAccess();
-            if (fullscreenCameraContainer) {
-                fullscreenCameraContainer.style.display = 'none';
-                alert("Não foi possível acessar a câmera. Verifique as permissões.");
-            }
-        });
+        };
+
+        currentStream = await navigator.mediaDevices.getUserMedia(constraints);
+        videoElement.srcObject = currentStream;
+        videoElement.play();
+        
+        // Exibir a tela da câmera
+        cameraContainer.classList.add('active');
+        updateDateTime(); // Inicia o relógio
+        shutterBtn.disabled = false;
+        
+    } catch (err) {
+        console.error("Erro ao acessar a câmera: ", err);
+        alert(`Não foi possível iniciar a câmera. Erro: ${err.name}.`);
+        stopCamera();
+    }
 }
 
 function stopCamera() {
@@ -396,123 +212,261 @@ function stopCamera() {
         currentStream.getTracks().forEach(track => track.stop());
         currentStream = null;
     }
-    if (fullscreenCameraContainer) {
-        fullscreenCameraContainer.style.display = 'none';
+    if (videoElement) {
+        videoElement.srcObject = null;
     }
-    checkCameraAccess();
+    if (cameraContainer) {
+        cameraContainer.classList.remove('active');
+    }
+    shutterBtn.disabled = true;
+    // Opcional: Recarrega a galeria ao fechar
+    renderPhotoList(); 
 }
 
-function updateDateTimeWatermark() {
-    if (dateTimeElement) {
-        const date = new Date();
-        const dateTimeText = date.toLocaleDateString('pt-BR', {
-            day: '2-digit', month: '2-digit', year: 'numeric',
-            hour: '2-digit', minute: '2-digit', second: '2-digit'
-        });
-        
-        const entregador = selectEntregador ? selectEntregador.value || 'N/A' : 'N/A';
-        const rede = selectRede ? selectRede.value || 'N/A' : 'N/A';
-        const loja = selectLoja ? selectLoja.value || 'N/A' : 'N/A';
-        const status = selectStatus && selectStatus.value ? selectStatus.value.toUpperCase() : null;
+// ==================== CÂMERA: FOTO E MARCA D'ÁGUA ====================
 
-        let watermarkContent = `${dateTimeText}`;
-        watermarkContent += `<br>Entregador: ${entregador}`;
-        watermarkContent += `<br>Rede: ${rede} || Loja: ${loja}`;
-        if (!isDevolucaoPage) {
-            watermarkContent += `<br>STATUS: ${status || 'N/A'}`;
-        } else {
-            const motivo = selectMotivo ? selectMotivo.value || 'N/A' : 'N/A';
-            const produto = selectProduto ? selectProduto.value || 'N/A' : 'N/A';
-            const quantidade = inputQuantidade ? inputQuantidade.value.trim() : 'N/A';
-            
-            watermarkContent += `<br>Motivo: ${motivo}`;
-            watermarkContent += `<br>Produto: ${produto} || QTD: ${quantidade} KG`;
-        }
-        
-        dateTimeElement.innerHTML = watermarkContent;
+function updateDateTime() {
+    if (dateTimeDisplay) {
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('pt-BR');
+        const timeStr = now.toLocaleTimeString('pt-BR');
+        dateTimeDisplay.textContent = `${dateStr} ${timeStr}`;
     }
-    if (currentStream) { 
-        requestAnimationFrame(updateDateTimeWatermark); 
-    }
+    requestAnimationFrame(updateDateTime);
 }
-
 
 function takePhoto() {
-    if (!currentStream) {
-        alert("A câmera não está ativa.");
+    if (!videoElement || videoElement.readyState !== videoElement.HAVE_ENOUGH_DATA) return;
+    if (photos.length >= maxPhotos) {
+        alert(`Limite de ${maxPhotos} fotos atingido! Remova fotos antigas antes de continuar.`);
         return;
     }
-    
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
-    drawWatermark(canvas, ctx);
 
-    const photoDataUrl = canvas.toDataURL('image/jpeg', 0.9);
-    photos.push(photoDataUrl);
+    shutterBtn.disabled = true; // Desabilita o botão para evitar cliques duplos
+
+    const canvas = document.createElement('canvas');
+    canvas.width = videoElement.videoWidth;
+    canvas.height = videoElement.videoHeight;
+    const ctx = canvas.getContext('2d');
     
-    updateGallery();
+    // 1. Desenha o frame do vídeo
+    ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+    
+    // 2. Adiciona a marca d'água (data/hora e informações do formulário)
+    const now = new Date();
+    const dateTimeText = now.toLocaleString('pt-BR');
+    
+    // Coleta dados do formulário
+    const entregador = selectEntregador ? selectEntregador.value : 'N/A';
+    const rede = selectRede ? selectRede.value : 'N/A';
+    const loja = selectLoja ? selectLoja.value : 'N/A';
+    const status = selectStatus ? selectStatus.value : 'N/A';
+    
+    const infoText1 = `${rede} - ${loja}`;
+    const infoText2 = `${entregador} | ${status}`;
+
+    // Estilo da Marca D'água
+    const fontSize = Math.floor(canvas.height / 30); // Fonte responsiva
+    const margin = fontSize / 2;
+    const shadowColor = 'rgba(0,0,0,0.8)';
+    const textColor = 'white';
+
+    ctx.fillStyle = textColor;
+    ctx.strokeStyle = shadowColor;
+    ctx.lineWidth = 4;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'bottom';
+    ctx.font = `bold ${fontSize}px sans-serif`;
+
+    // Desenha Data/Hora (Bottom-Left)
+    let y = canvas.height - margin;
+    let x = margin;
+    ctx.strokeText(dateTimeText, x, y);
+    ctx.fillText(dateTimeText, x, y);
+    
+    // Desenha Linha 1 (Rede/Loja) (Top-Left)
+    y = margin + fontSize;
+    x = margin;
+    ctx.strokeText(infoText1, x, y);
+    ctx.fillText(infoText1, x, y);
+
+    // Desenha Linha 2 (Entregador/Status) (Top-Left, abaixo da Linha 1)
+    y = margin + (fontSize * 2) + (margin / 2);
+    x = margin;
+    ctx.strokeText(infoText2, x, y);
+    ctx.fillText(infoText2, x, y);
+
+    // 3. Salva a foto
+    const photoDataUrl = canvas.toDataURL('image/jpeg', 0.9); // Boa qualidade JPEG
+    
+    photos.push({
+        dataUrl: photoDataUrl,
+        timestamp: now.getTime(),
+        entregador: entregador,
+        rede: rede,
+        loja: loja,
+        status: status,
+    });
+    
+    localStorage.setItem('qdelicia_photos_geral', JSON.stringify(photos));
+    
+    renderPhotoList();
+    
+    setTimeout(() => {
+        shutterBtn.disabled = false; // Reabilita o botão após um breve delay
+    }, 500);
 }
 
-function updateGallery() {
-    if (!photoList) return; 
+// ==================== GALERIA: RENDERIZAÇÃO E AÇÕES ====================
 
-    photoList.innerHTML = ''; 
+function renderPhotoList() {
+    if (!photoListContainer) return;
 
-    if (photoCountElement) photoCountElement.textContent = photos.length;
+    photoListContainer.innerHTML = ''; // Limpa a galeria
+
+    // Inverte a ordem para mostrar as mais novas primeiro
+    photos.slice().reverse().forEach((photo, originalIndex) => {
+        // Calcula o índice original correto (necessário para a exclusão)
+        const trueIndex = photos.length - 1 - originalIndex; 
+
+        const photoCard = document.createElement('div');
+        photoCard.className = 'photo-card';
+        photoCard.setAttribute('data-index', trueIndex);
+
+        const img = document.createElement('img');
+        img.src = photo.dataUrl;
+        img.alt = `Registro ${trueIndex + 1}`;
+        photoCard.appendChild(img);
+        
+        // Informações
+        const info = document.createElement('div');
+        info.className = 'photo-info';
+        const date = new Date(photo.timestamp).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+        info.innerHTML = `
+            <p>#${trueIndex + 1} | ${date}</p>
+            <p class="small-text">${photo.rede} - ${photo.loja}</p>
+            <p class="small-text">${photo.status}</p>
+        `;
+        photoCard.appendChild(info);
+
+        // Ações (Botões)
+        const actions = document.createElement('div');
+        actions.className = 'photo-actions';
+
+        // Botão Download
+        const downloadBtn = document.createElement('button');
+        downloadBtn.className = 'action-btn secondary-btn';
+        downloadBtn.innerHTML = '<i class="fas fa-download"></i>';
+        downloadBtn.title = 'Baixar Foto';
+        downloadBtn.addEventListener('click', () => downloadPhoto(trueIndex));
+        actions.appendChild(downloadBtn);
+
+        // Botão Compartilhar (WhatsApp)
+        const shareBtn = document.createElement('button');
+        shareBtn.className = 'action-btn primary-btn';
+        shareBtn.innerHTML = '<i class="fab fa-whatsapp"></i>';
+        shareBtn.title = 'Compartilhar no WhatsApp';
+        shareBtn.addEventListener('click', () => sharePhoto(trueIndex));
+        actions.appendChild(shareBtn);
+        
+        // Botão Remover
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'action-btn danger-btn';
+        removeBtn.innerHTML = '<i class="fas fa-trash"></i>';
+        removeBtn.title = 'Remover Foto';
+        removeBtn.addEventListener('click', () => removePhoto(trueIndex));
+        actions.appendChild(removeBtn);
+
+        photoCard.appendChild(actions);
+        photoListContainer.appendChild(photoCard);
+    });
+
+    // Atualiza o contador e botões globais
+    if (photoCountDisplay) photoCountDisplay.textContent = photos.length;
     
     const hasPhotos = photos.length > 0;
     if (downloadAllBtn) downloadAllBtn.disabled = !hasPhotos;
     if (shareAllBtn) shareAllBtn.disabled = !hasPhotos;
-    
-    photos.forEach((photoUrl, index) => {
-        const photoItem = document.createElement('div');
-        photoItem.classList.add('photo-item');
-        
-        const img = document.createElement('img');
-        img.src = photoUrl;
-        photoItem.appendChild(img);
-        
-        const downloadBtn = document.createElement('a');
-        downloadBtn.href = photoUrl;
-        downloadBtn.download = `qdelicia_registro_${index + 1}.jpg`;
-        downloadBtn.classList.add('icon-btn', 'download-icon');
-        downloadBtn.innerHTML = '<i class="fas fa-download"></i>';
-        
-        const deleteBtn = document.createElement('button');
-        deleteBtn.classList.add('icon-btn', 'delete-icon');
-        deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
-        deleteBtn.addEventListener('click', () => {
-            photos.splice(index, 1);
-            updateGallery(); 
-        });
-
-        const controlsContainer = document.createElement('div');
-        controlsContainer.classList.add('photo-controls');
-        controlsContainer.appendChild(downloadBtn);
-        controlsContainer.appendChild(deleteBtn);
-        
-        photoItem.appendChild(controlsContainer);
-        photoList.prepend(photoItem); 
-    });
 }
+
+function removePhoto(index) {
+    if (confirm(`Tem certeza que deseja remover o registro #${index + 1}?`)) {
+        photos.splice(index, 1); // Remove 1 elemento na posição 'index'
+        localStorage.setItem('qdelicia_photos_geral', JSON.stringify(photos));
+        renderPhotoList();
+    }
+}
+
+function downloadPhoto(index) {
+    const photo = photos[index];
+    if (!photo) return;
+    
+    // Cria um nome de arquivo descritivo
+    const dateStr = new Date(photo.timestamp).toLocaleDateString('pt-BR').replace(/\//g, '');
+    const timeStr = new Date(photo.timestamp).toLocaleTimeString('pt-BR').replace(/:/g, '');
+    const fileName = `registro_${photo.rede.replace(/ /g, '_')}_${photo.loja.replace(/ /g, '_')}_${dateStr}_${timeStr}.jpg`;
+
+    const link = document.createElement('a');
+    link.href = photo.dataUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+/**
+ * @description Modificada para incluir a legenda com dados do formulário.
+ * @param {number} index Índice da foto na array.
+ */
+function sharePhoto(index) {
+    const photo = photos[index];
+    if (!photo) return;
+
+    // 1. Constrói a legenda completa
+    const dateStr = new Date(photo.timestamp).toLocaleString('pt-BR');
+    const legenda = `
+📸 *Registro QDelícia*
+-------------------------
+*Data/Hora:* ${dateStr}
+*Entregador:* ${photo.entregador}
+*Rede/Loja:* ${photo.rede} - ${photo.loja}
+*Status:* ${photo.status}
+-------------------------
+`;
+
+    // 2. Converte o Base64 para um Blob (necessário para o Web Share API - Não funciona com DataURL direto no WhatsApp)
+    const base64Parts = photo.dataUrl.split(',');
+    const mimeType = base64Parts[0].match(/:(.*?);/)[1];
+    const data = base64Parts[1];
+    const byteCharacters = atob(data);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: mimeType });
+    const file = new File([blob], 'registro.jpg', { type: mimeType });
+
+
+    // 3. Usa o Web Share API (Nativo do Browser)
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({
+            files: [file],
+            title: 'Registro de Logística QDelícia',
+            text: legenda // A legenda é enviada via 'text'
+        })
+        .catch((error) => console.error('Erro no compartilhamento:', error));
+    } else {
+        // Fallback para ambientes que não suportam (desktop/alguns Androids)
+        alert('Seu navegador não suporta o compartilhamento direto de arquivos. Por favor, baixe a imagem e compartilhe manualmente, colando esta legenda:\n\n' + legenda);
+    }
+}
+
 
 function downloadAllPhotos() {
     if (photos.length === 0) return;
-    alert("Baixando todas as fotos..."); 
-
-    photos.forEach((photoUrl, index) => {
-        const link = document.createElement('a');
-        link.href = photoUrl;
-        link.download = `qdelicia_registro_${index + 1}.jpg`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    });
+    alert("O download de múltiplas imagens deve ser feito uma a uma no mobile, ou você pode baixar e descompactar o ZIP no desktop.");
+    // Implementação de ZIP é complexa e será ignorada por enquanto
 }
 
 function shareAllPhotos() {
@@ -526,6 +480,7 @@ if (openCameraBtn) {
         if (currentStream) {
             stopCamera(); 
         } else if (checkCameraAccess()) { 
+            // Usa a câmera que estava configurada no estado 'usingFrontCamera'
             startCamera(usingFrontCamera ? 'user' : 'environment'); 
         }
     });
@@ -536,6 +491,7 @@ if (backToGalleryBtn) backToGalleryBtn.addEventListener('click', stopCamera);
 if (switchBtn) {
     switchBtn.addEventListener('click', () => {
         usingFrontCamera = !usingFrontCamera;
+        // Reinicia a câmera com o novo modo
         startCamera(usingFrontCamera ? 'user' : 'environment');
     });
 }
@@ -547,5 +503,49 @@ if (shareAllBtn) shareAllBtn.addEventListener('click', shareAllPhotos);
 // ==================== INICIALIZAÇÃO GERAL ====================
 window.addEventListener('load', () => {
     // Carrega as seleções salvas e preenche os dropdowns da câmera
-    loadAndPopulateDropdowns(); 
+    loadAndPopulateDropdowns();
+    // Renderiza a galeria
+    renderPhotoList();
+    
+    // Configura o menu hamburger (Copia as funções do script.js)
+    const menuToggle = document.querySelector('.menu-toggle');
+    const sideMenu = document.querySelector('.side-menu');
+    const menuOverlay = document.querySelector('.menu-overlay');
+
+    if (menuToggle && sideMenu && menuOverlay) {
+        menuToggle.addEventListener('click', () => {
+            sideMenu.classList.toggle('active');
+            menuOverlay.classList.toggle('active');
+        });
+
+        menuOverlay.addEventListener('click', () => {
+            sideMenu.classList.remove('active');
+            menuOverlay.classList.remove('active');
+        });
+        
+        // Garante que o menu feche ao clicar em um link
+        sideMenu.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                sideMenu.classList.remove('active');
+                menuOverlay.classList.remove('active');
+            });
+        });
+    }
+
+    // Configura o botão voltar ao topo
+    const backToTop = document.querySelector('.back-to-top');
+
+    if (backToTop) {
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                backToTop.classList.add('show');
+            } else {
+                backToTop.classList.remove('show');
+            }
+        });
+
+        backToTop.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
 });
