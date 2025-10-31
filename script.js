@@ -131,6 +131,14 @@ function populateLojas() {
         const selectedRede = selectRede.value;
         const lojas = APP_DATA.REDES_LOJAS[selectedRede] || [];
         
+        if (selectedRede) {
+            // CORREÇÃO: Habilita o campo Loja assim que uma Rede é selecionada
+            selectLoja.disabled = false;
+        } else {
+            // Se nenhuma rede estiver selecionada, mantém o campo Loja desabilitado
+            selectLoja.disabled = true;
+        }
+
         lojas.forEach(loja => {
             const option = new Option(loja, loja);
             selectLoja.add(option);
