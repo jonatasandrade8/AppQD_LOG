@@ -5,11 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Página de Conferência Geral de Produtos - Logística Qdelícia">
     <title>Conferência Geral - Logística Qdelícia</title>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="./style.css"> 
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
 </head>
 <body>
     
@@ -28,71 +30,56 @@
             <i class="fas fa-bars"></i>
         </button>
         <div class="logo-placeholder">
-            <img src="./images/logo-qdelicia.png" alt="Logomarca Qdelícia Frutas"> 
+            <img src="./images/logo-qdelicia.png" alt="Logomarca Qdelícia Frutas">
         </div>
-        <h1>Conferência Geral - Lojas</h1>
+        <h1>Conferência de Lojas</h1>
     </header>
 
-     <main class="calculator-main">
+    <main class="container">
         
-        <section id="user-info-section" class="calculator-section input-box">
-            <h2>1. Informações da Conferência</h2>
+        <section id="user-info-section" class="calculator-section">
+            <h2>1. Dados Iniciais</h2>
             <div class="input-group">
-                <label for="select-conferente"><i class="fas fa-user-check"></i> Seu Nome:</label>
+                <label for="select-conferente">Conferente:</label>
                 <select id="select-conferente" required></select>
             </div>
             <div class="input-group">
-                <label for="select-rede"><i class="fas fa-store"></i> Cliente/Rede:</label>
+                <label for="select-rede">Rede/Cliente:</label>
                 <select id="select-rede" required></select>
             </div>
             <div class="input-group">
-                <label for="select-loja"><i class="fas fa-map-marker-alt"></i> Loja/PDV:</label>
-                <select id="select-loja" required disabled></select>
+                <label for="select-loja">Loja/PDV:</label>
+                <select id="select-loja" disabled required></select>
             </div>
         </section>
 
-
-        <section id="nota-input-section" class="calculator-section input-box">
-            <h2>2. Notas Fiscais (KG)</h2>
-            <p>Insira a quantidade em kg para cada produto da nota fiscal.</p>
-            <div id="product-targets-grid" class="product-targets-grid">
+        <section id="nota-input-section" class="calculator-section">
+            <h2>2. KG da Nota Fiscal (NF)</h2>
+            <div id="product-targets-grid" class="input-grid">
                 </div>
-            <button id="start-conference-btn" class="action-btn primary-btn" disabled>Iniciar Conferência</button>
+            <button id="start-conference-btn" class="action-btn primary-btn" disabled>Preencha todos os campos</button>
         </section>
 
-        <section id="nota-inputs-section" class="calculator-section" style="display: none;">
-            <h2>2. Detalhes da Nota Fiscal</h2>
-            <div class="input-group-inline">
-                <label for="input-nota-fiscal">N° da Nota Fiscal:</label>
-                <input type="text" id="input-nota-fiscal" placeholder="Ex: 123456" required>
-            </div>
-        </section>
-
-        <section id="conference-input-section" class="calculator-section">
-            <h2>3. Lançamento da Conferência (Por Produto)</h2>
-            <div class="input-group-inline">
+        <section id="conference-input-section" class="calculator-section" style="display: none;">
+            <h2>3. Lançamento da Conferência</h2>
+            <div class="input-group">
                 <label for="select-product-conference">Produto:</label>
-                <select id="select-product-conference" required>
-                    <option value="" disabled selected>Selecione o Produto</option>
-                </select>
+                <select id="select-product-conference" required></select>
             </div>
-            <div class="input-row">
-                <div class="input-group-inline">
-                    <label for="input-kg-nota">KG na Nota:</label>
-                    <input type="number" id="input-kg-nota" placeholder="Ex: 500.00" step="0.01" min="0" required>
-                </div>
-                <div class="input-group-inline">
-                    <label for="input-kg-conferido">KG Conferido:</label>
-                    <input type="number" id="input-kg-conferido" placeholder="Ex: 490.50" step="0.01" min="0" required>
-                </div>
+            <div class="input-group-inline">
+                <label for="input-kg-conference">KG Conferido:</label>
+                <input type="number" id="input-kg-conference" placeholder="0.00" step="0.01" min="0" required>
+                <button id="add-conference-btn" class="action-btn secondary-btn" disabled><i class="fas fa-plus"></i> Adicionar</button>
             </div>
-            <button id="add-conference-btn" class="action-btn primary-btn" disabled>
-                <i class="fas fa-plus-circle"></i> Adicionar/Atualizar Produto
-            </button>
         </section>
-        
-        <section id="conference-summary-section" class="calculator-section">
+
+        <section id="conference-summary-section" class="calculator-section" style="display: none;">
             <h2>4. Resumo da Conferência</h2>
+            <div class="summary-header">
+                <p><strong>Conferente:</strong> <span id="summary-conferente"></span></p>
+                <p><strong>Local:</strong> <span id="summary-rede-loja"></span></p>
+            </div>
+
             <div class="table-container">
                 <table id="conference-summary-table" class="discharge-table">
                     <thead>
@@ -102,9 +89,9 @@
                             <th>KG Conferido</th>
                             <th>Diferença (KG)</th>
                             <th>Status</th>
-                            <th>Remover</th> </tr>
+                        </tr>
                     </thead>
-                    <tbody id="conference-summary-body">
+                    <tbody>
                         </tbody>
                 </table>
             </div>
@@ -112,7 +99,7 @@
             <div class="report-buttons">
                 <button id="share-pdf-btn" class="action-btn primary-btn" disabled><i class="fab fa-whatsapp"></i> Compartilhar PDF</button>
                 <button id="share-csv-btn" class="action-btn primary-btn" disabled><i class="fab fa-whatsapp"></i> Compartilhar CSV</button>
-                <button id="download-pdf-btn" class="action-btn secondary-btn" disabled><i class="fas fa-download"></i> Baixar PDF</button>
+                <button id="download-pdf-btn" class="action-btn secondary-btn" disabled><i class="fas fa-file-pdf"></i> Baixar PDF</button>
             </div>
             <button id="reset-conference-btn" class="action-btn secondary-btn" style="margin-top: 10px;">Reiniciar Conferência</button>
         </section>
@@ -126,9 +113,7 @@
     <a href="https://wa.me/5581997250086" class="whatsapp-btn" target="_blank">
         <i class="fab fa-whatsapp"></i>
     </a>
-    <div class="back-to-top">
-        <i class="fas fa-arrow-up"></i>
-    </div>
+    <div class="back-to-top"><i class="fas fa-chevron-up"></i></div>
     
     <script src="./conferencia_geral.js"></script>
 </body>
