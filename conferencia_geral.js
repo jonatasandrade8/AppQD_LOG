@@ -1,4 +1,10 @@
-// ==================== ESTRUTURA DE DADOS (CÓPIA DE script.js) ====================
+// =======================================================================
+// ARQUIVO: conferencia_geral.js
+// DESCRIÇÃO: Lógica para a página de Conferência Geral de Produtos.
+// Inclui persistência de estado (localStorage) e geração de PDF/CSV.
+// =======================================================================
+
+// ==================== ESTRUTURA DE DADOS ====================
 const APP_DATA = {
     // Entregadores (lista independente)
     ENTREGADORES: [
@@ -30,17 +36,18 @@ const APP_DATA = {
 };
 
 const localStorageKeyConference = 'qdelicia_logistica_conference'; 
-const localStorageKeyConferenceState = 'qdelicia_logistica_conference_state'; // CHAVE PARA O ESTADO COMPLETO
+const localStorageKeyConferenceState = 'qdelicia_logistica_conference_state'; 
 
 // ==================== VARIÁVEIS DE ESTADO ====================
-let notaQuantities = {}; // Armazena KG da nota (Ex: { "Pacovan": 100, "Prata": 50, ... })
-let conferenceEntries = {}; // Armazena KG conferido (Ex: { "Pacovan": 98, "Prata": 50.5, ... })
+let notaQuantities = {}; 
+let conferenceEntries = {}; 
 
-// Inicializa conferenceEntries com 0 para todos os produtos da nota
+/**
+ * @description Inicializa conferenceEntries com 0 para todos os produtos que estão na nota.
+ */
 function initializeConferenceEntries() {
     conferenceEntries = {};
     APP_DATA.PRODUTOS_CONFERENCIA.forEach(produto => {
-        // Inicializa apenas se o produto foi inserido na nota
         if(notaQuantities[produto] && parseFloat(notaQuantities[produto]) > 0) {
             conferenceEntries[produto] = 0;
         }
@@ -67,19 +74,14 @@ const conferenceSummaryTableBody = conferenceSummarySection ? conferenceSummaryS
 const summaryConferente = document.getElementById('summary-conferente');
 const summaryRedeLoja = document.getElementById('summary-rede-loja');
 
-// ================== NOVOS SELETORES DE BOTÃO ==================
 const downloadPdfBtn = document.getElementById('download-pdf-btn');
 const sharePdfBtn = document.getElementById('share-pdf-btn');
 const shareCsvBtn = document.getElementById('share-csv-btn');
-// ==============================================================
-
-const conferenceReportContent = document.getElementById('conference-report-content');
 const resetConferenceBtn = document.getElementById('reset-conference-btn');
 
 
 // ==================== FUNÇÕES UTILS E DROPDOWNS ====================
 
-// Funções de Dropdown e Persistência de Seleção
 function saveSelection() {
     const selection = {
         conferente: selectConferente ? selectConferente.value : '',
@@ -175,15 +177,11 @@ function loadConferenceState() {
     try {
         const state = JSON.parse(savedState);
         
-        // 1. Restaura os dados
         notaQuantities = state.notaQuantities || {};
         conferenceEntries = state.conferenceEntries || {};
 
-        // 2. Restaura o estado da interface
         if (state.isConferenceStarted) {
-            // Reabilita o botão 'Iniciar Conferência' para que startConference() funcione corretamente
             startConferenceBtn.disabled = false;
-            // Força o início da conferência para restaurar as seções
             startConference(true); 
         } else {
             updateSummaryDisplay();
@@ -191,7 +189,6 @@ function loadConferenceState() {
 
     } catch (e) {
         console.error("Erro ao carregar estado da conferência:", e);
-        // Em caso de erro, limpa o estado corrompido
         localStorage.removeItem(localStorageKeyConferenceState);
     }
 }
@@ -221,7 +218,6 @@ function populateNotaInputs() {
         input.min = '0';
         input.required = true;
         
-        // Carrega valor do estado
         const savedValue = notaQuantities[produto];
         if (savedValue && parseFloat(savedValue) > 0) {
              input.value = parseFloat(savedValue);
@@ -229,12 +225,9 @@ function populateNotaInputs() {
              input.value = '';
         }
         
-        // Listener de input para atualizar o estado e salvar
         input.addEventListener('input', () => {
-            // Atualiza notaQuantities
             notaQuantities[produto] = parseFloat(input.value) || 0;
             
-            // Salva o estado, verifica botão e atualiza resumo
             saveConferenceState(); 
             checkStartConferenceButton();
             updateSummaryDisplay();
@@ -247,7 +240,7 @@ function populateNotaInputs() {
 }
 
 /**
- * @description Verifica se os campos iniciais (Usuário, Rede, Loja e pelo menos 1 KG da nota) estão preenchidos para liberar o botão 'Iniciar Conferência'.
+ * @description Verifica se os campos iniciais estão preenchidos para liberar o botão 'Iniciar Conferência'.
  */
 function checkStartConferenceButton() {
     const isUserInfoReady = selectConferente && selectConferente.value && 
@@ -270,25 +263,20 @@ function checkStartConferenceButton() {
  * @param {boolean} isRestoring - Indica se a função foi chamada ao restaurar o estado.
  */
 function startConference(isRestoring = false) {
-    // 1. Desabilita inputs da Nota e do Usuário
     document.querySelectorAll('#nota-input-section input, #user-info-section select').forEach(el => el.disabled = true);
     startConferenceBtn.style.display = 'none';
 
-    // 2. Prepara o objeto de conferência (se não estiver restaurando)
     if (!isRestoring) {
         initializeConferenceEntries();
     }
     
-    // 3. Exibe a seção de lançamento e resumo
     conferenceInputSection.style.display = 'block';
     conferenceSummarySection.style.display = 'block';
     
-    // 4. Preenche o select de produtos para conferência
     const availableProducts = APP_DATA.PRODUTOS_CONFERENCIA.filter(p => notaQuantities[p] && parseFloat(notaQuantities[p]) > 0);
     populateSelect(selectProductConference, availableProducts, "Selecione o Produto para conferir");
-    selectProductConference.value = ''; // Limpa a seleção
+    selectProductConference.value = ''; 
     
-    // 5. Atualiza a exibição inicial e salva o estado
     updateSummaryDisplay();
     saveConferenceState();
 }
@@ -305,15 +293,12 @@ function addConferenceEntry() {
         return;
     }
 
-    // Soma o valor ao total conferido para o produto
     conferenceEntries[produto] = (conferenceEntries[produto] || 0) + kg;
 
-    // Limpa o formulário de lançamento
     selectProductConference.value = '';
     inputKgConference.value = '';
     addConferenceBtn.disabled = true;
 
-    // Atualiza a tabela e salva o estado
     updateSummaryDisplay();
     saveConferenceState();
 }
@@ -324,7 +309,6 @@ function addConferenceEntry() {
 function updateSummaryDisplay() {
     if (!conferenceSummaryTableBody) return;
 
-    // 1. Atualiza dados do cabeçalho
     summaryConferente.textContent = selectConferente.value || 'N/A';
     summaryRedeLoja.textContent = (selectRede.value && selectLoja.value) ? `${selectRede.value} / ${selectLoja.value}` : 'N/A';
     
@@ -335,12 +319,10 @@ function updateSummaryDisplay() {
     let totalDiferenca = 0;
     let hasData = false;
 
-    // 2. Preenche a tabela
     APP_DATA.PRODUTOS_CONFERENCIA.forEach(produto => {
         const notaKg = parseFloat(notaQuantities[produto]) || 0;
         const conferidoKg = parseFloat(conferenceEntries[produto]) || 0;
         
-        // Exibe apenas produtos com KG na nota ou já conferidos
         if (notaKg > 0 || conferidoKg > 0) {
             hasData = true;
             const diferenca = conferidoKg - notaKg;
@@ -367,7 +349,6 @@ function updateSummaryDisplay() {
         }
     });
 
-    // 3. Adiciona a linha de total
     if (totalNota > 0 || totalConferido > 0) {
         const totalRow = conferenceSummaryTableBody.insertRow();
         totalRow.classList.add('total-row');
@@ -383,7 +364,6 @@ function updateSummaryDisplay() {
         totalRow.insertCell().textContent = totalDiferenca === 0 ? 'OK' : (totalDiferenca < 0 ? 'FALTA' : 'SOBRA');
     }
     
-    // 4. Habilita/Desabilita botões de relatório
     if (downloadPdfBtn) downloadPdfBtn.disabled = !hasData;
     if (sharePdfBtn) sharePdfBtn.disabled = !hasData;
     if (shareCsvBtn) shareCsvBtn.disabled = !hasData;
@@ -395,7 +375,6 @@ function updateSummaryDisplay() {
 
 /**
  * @description Coleta todos os dados do relatório em um objeto estruturado.
- * @returns {object} Um objeto contendo todos os dados para os relatórios.
  */
 function getConferenceReportData() {
     const date = new Date();
@@ -433,7 +412,7 @@ function getConferenceReportData() {
         dataGeracao: date.toLocaleString('pt-BR'),
         dataArquivo: date.toISOString().slice(0, 10).replace(/-/g, ''),
         
-        detalhes: detalhes, // Array de objetos para a tabela
+        detalhes: detalhes, 
         
         resumo: {
             totalNota: totalNota,
@@ -444,21 +423,17 @@ function getConferenceReportData() {
 }
 
 /**
- * @description Gera um objeto jsPDF profissional com AutoTable.
- * @param {object} data - O objeto de dados da função getConferenceReportData()
- * @returns {object} O objeto 'doc' do jsPDF.
+ * @description Gera um objeto jsPDF profissional com AutoTable, incluindo a logomarca.
  */
 function generateConferencePdf(data) {
-    // 1. Verifica se a biblioteca jsPDF principal está carregada
     if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
         alert("Erro: A biblioteca jsPDF não foi carregada.");
         return null;
     }
     
-    // 2. Cria a instância do documento
-    const doc = new window.jspdf.jsPDF(); // CORRIGIDO: Instancia diretamente do global
+    const doc = new window.jspdf.jsPDF(); 
 
-    // 3. NOVO CHECK: Verifica se o plugin autoTable foi carregado (método autoTable no documento)
+    // Verifica se o plugin autoTable foi carregado (CORREÇÃO DE ERRO)
     if (typeof doc.autoTable === 'undefined') {
         alert("Erro: O plugin jsPDF-AutoTable não foi carregado. Verifique a ordem dos scripts no HTML.");
         return null;
@@ -466,6 +441,23 @@ function generateConferencePdf(data) {
     
     let startY = 20;
 
+    // === INSERÇÃO DA LOGOMARCA ===
+    const logoPath = './images/logo-qdelicia.png';
+    const logoWidth = 30; 
+    const logoHeight = 8; 
+    const margin = 14; 
+
+    try {
+        // Posição: 14mm da esquerda e 14mm do topo
+        doc.addImage(logoPath, 'PNG', margin, 14, logoWidth, logoHeight); 
+    } catch (e) {
+        console.warn("Não foi possível carregar a logomarca no PDF.", e);
+    }
+    // === FIM DA INSERÇÃO DA LOGOMARCA ===
+    
+    // O cabeçalho agora começa mais abaixo para acomodar a logo
+    startY = 32; 
+    
     // === CABEÇALHO ===
     doc.setFontSize(18);
     doc.setFont(undefined, 'bold');
@@ -506,20 +498,19 @@ function generateConferencePdf(data) {
         body: tableBody,
         startY: startY,
         theme: 'striped',
-        headStyles: { fillColor: [93, 63, 211], textColor: 255, fontStyle: 'bold' }, // Cor primária
+        headStyles: { fillColor: [93, 63, 211], textColor: 255, fontStyle: 'bold' }, 
         didParseCell: function (hookData) {
-            // Colore as células de Diferença e Status
             if (hookData.section === 'body') {
                 const cellValue = hookData.cell.raw;
-                if (hookData.column.dataKey === 3) { // Coluna Diferença (KG)
+                if (hookData.column.dataKey === 3) { 
                     const numValue = parseFloat(cellValue);
-                    if (numValue < 0) hookData.cell.styles.textColor = [211, 63, 63]; // Vermelho (Falta)
-                    if (numValue > 0) hookData.cell.styles.textColor = [255, 152, 0]; // Laranja (Sobra)
+                    if (numValue < 0) hookData.cell.styles.textColor = [211, 63, 63]; 
+                    if (numValue > 0) hookData.cell.styles.textColor = [255, 152, 0]; 
                 }
-                if (hookData.column.dataKey === 4) { // Coluna Status
+                if (hookData.column.dataKey === 4) { 
                     if (cellValue === 'Falta') hookData.cell.styles.textColor = [211, 63, 63];
                     if (cellValue === 'Sobra') hookData.cell.styles.textColor = [255, 152, 0];
-                    if (cellValue === 'OK') hookData.cell.styles.textColor = [37, 211, 102]; // Verde
+                    if (cellValue === 'OK') hookData.cell.styles.textColor = [37, 211, 102]; 
                 }
             }
         }
@@ -530,8 +521,6 @@ function generateConferencePdf(data) {
 
 /**
  * @description Gera o texto para um arquivo CSV.
- * @param {object} data - O objeto de dados da função getConferenceReportData()
- * @returns {string} O texto formatado em CSV.
  */
 function generateConferenceCsv(data) {
     const separator = ';';
@@ -543,15 +532,12 @@ function generateConferenceCsv(data) {
     csv += `Data Geracao${separator}${data.dataGeracao}${eol}`;
     csv += `${eol}`;
 
-    // Cabeçalho da Tabela
     csv += `Produto${separator}KG Nota${separator}KG Conferido${separator}Diferenca (KG)${separator}Status${eol}`;
     
-    // Linhas da Tabela
     data.detalhes.forEach(item => {
         csv += `${item.produto}${separator}${item.notaKg.toFixed(2)}${separator}${item.conferidoKg.toFixed(2)}${separator}${item.diferenca.toFixed(2)}${separator}${item.status}${eol}`;
     });
     
-    // Linha de Total
     csv += `${eol}`;
     csv += `TOTAL${separator}${data.resumo.totalNota.toFixed(2)}${separator}${data.resumo.totalConferido.toFixed(2)}${separator}${data.resumo.totalDiferenca.toFixed(2)}${eol}`;
     
@@ -662,18 +648,14 @@ function downloadPdfReport() {
  * @description Reinicia todo o estado da conferência e LIMPA o Local Storage.
  */
 function resetConference() {
-    // 1. Limpa o estado
     notaQuantities = {};
     conferenceEntries = {};
     
-    // 2. Limpa LocalStorage
-    localStorage.removeItem(localStorageKeyConference); // Limpa seleção de usuário
-    localStorage.removeItem(localStorageKeyConferenceState); // Limpa o estado da conferência
+    localStorage.removeItem(localStorageKeyConference); 
+    localStorage.removeItem(localStorageKeyConferenceState); 
     
-    // 3. Reseta a interface (mesma lógica anterior)
     document.querySelectorAll('#nota-input-section input, #user-info-section select').forEach(el => el.disabled = false);
     
-    // Reseta selects de usuário (loadAndPopulateDropdowns faz isso)
     loadAndPopulateDropdowns(); 
 
     startConferenceBtn.style.display = 'block';
@@ -683,7 +665,6 @@ function resetConference() {
     
     if (conferenceSummaryTableBody) conferenceSummaryTableBody.innerHTML = '';
     
-    // Força a atualização dos inputs e botões
     populateNotaInputs(); 
     checkStartConferenceButton();
     updateSummaryDisplay(); 
@@ -691,7 +672,7 @@ function resetConference() {
 
 // ==================== INICIALIZAÇÃO E LISTENERS ====================
 
-// Adiciona os listeners para os campos de seleção do usuário
+// Listeners de seleção de usuário (salvam no localStorage)
 if (selectConferente) selectConferente.addEventListener('change', saveSelection);
 if (selectRede) selectRede.addEventListener('change', (e) => {
     populateLoja(e.target.value);
@@ -699,9 +680,11 @@ if (selectRede) selectRede.addEventListener('change', (e) => {
 });
 if (selectLoja) selectLoja.addEventListener('change', saveSelection);
 
-// Listeners dos botões de ação
+// Listeners dos botões de ação principal
 if (startConferenceBtn) startConferenceBtn.addEventListener('click', startConference);
 if (addConferenceBtn) addConferenceBtn.addEventListener('click', addConferenceEntry);
+
+// Listeners de habilitação do botão 'Adicionar'
 if (inputKgConference) inputKgConference.addEventListener('input', () => {
     addConferenceBtn.disabled = !selectProductConference.value || parseFloat(inputKgConference.value) <= 0;
 });
@@ -720,10 +703,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. Carrega/Preenche os dados do usuário/loja (seleção)
     loadAndPopulateDropdowns();
     
-    // 2. Tenta carregar o estado da conferência (notaQuantities e conferenceEntries)
+    // 2. Tenta carregar o estado da conferência 
     loadConferenceState();
     
-    // 3. Injeta os campos de input da nota (populando com os dados carregados)
+    // 3. Injeta os campos de input da nota (populando com os dados carregados ou vazios)
     populateNotaInputs();
     
     // 4. Configura o menu hamburger 
