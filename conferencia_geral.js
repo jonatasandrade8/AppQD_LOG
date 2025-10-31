@@ -131,11 +131,11 @@ function populateLoja(rede) {
 }
 
 function loadAndPopulateDropdowns() {
-    populateSelect(selectConferente, APP_DATA.ENTREGADORES, "Selecione o Conferente");
-    populateSelect(selectRede, APP_DATA.REDES_LOJAS, "Selecione a Rede/Cliente");
+    populateSelect(selectConferente, APP_DATA.ENTREGADORES, "Selecione o Entregador");
+    populateSelect(selectRede, APP_DATA.REDES_LOJAS, "Selecione a Rede");
 
     if (selectLoja) {
-          selectLoja.innerHTML = '<option value="" disabled selected>Selecione a Loja/PDV</option>';
+          selectLoja.innerHTML = '<option value="" disabled selected>Selecione a Loja</option>';
           selectLoja.disabled = true;
     }
 
