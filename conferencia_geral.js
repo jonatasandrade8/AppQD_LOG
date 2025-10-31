@@ -384,7 +384,8 @@ function getConferenceReportData() {
  * @returns {object} O objeto 'doc' do jsPDF.
  */
 function generateConferencePdf(data) {
-    if (typeof jsPDF === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
+    // CORREÇÃO: Acessa e instancia a classe jsPDF diretamente do objeto global
+    if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
         alert("Erro: A biblioteca jsPDF não foi carregada.");
         return null;
     }
@@ -393,8 +394,7 @@ function generateConferencePdf(data) {
         return null;
     }
 
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+    const doc = new window.jspdf.jsPDF(); // Linha CORRIGIDA
     let startY = 20;
 
     // === CABEÇALHO ===
