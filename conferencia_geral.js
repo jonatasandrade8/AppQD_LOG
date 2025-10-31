@@ -30,7 +30,7 @@ const APP_DATA = {
 };
 
 const localStorageKeyConference = 'qdelicia_logistica_conference'; 
-const localStorageKeyConferenceState = 'qdelicia_logistica_conference_state'; // NOVA CHAVE PARA O ESTADO COMPLETO
+const localStorageKeyConferenceState = 'qdelicia_logistica_conference_state'; // CHAVE PARA O ESTADO COMPLETO
 
 // ==================== VARIÁVEIS DE ESTADO ====================
 let notaQuantities = {}; // Armazena KG da nota (Ex: { "Pacovan": 100, "Prata": 50, ... })
@@ -151,7 +151,7 @@ function loadAndPopulateDropdowns() {
     checkStartConferenceButton();
 }
 
-// ==================== FUNÇÕES DE PERSISTÊNCIA DE ESTADO (NOVO) ====================
+// ==================== FUNÇÕES DE PERSISTÊNCIA DE ESTADO ====================
 
 /**
  * @description Salva o estado completo da conferência no localStorage.
@@ -179,20 +179,13 @@ function loadConferenceState() {
         notaQuantities = state.notaQuantities || {};
         conferenceEntries = state.conferenceEntries || {};
 
-        // 2. Restaura os inputs de KG da Nota Fiscal
-        // Isso é feito em populateNotaInputs, mas precisamos forçar a atualização dos valores
-        // O event listener 'input' no populateNotaInputs já chama o checkStartConferenceButton()
-        
-        // 3. Restaura o estado da interface
+        // 2. Restaura o estado da interface
         if (state.isConferenceStarted) {
             // Reabilita o botão 'Iniciar Conferência' para que startConference() funcione corretamente
             startConferenceBtn.disabled = false;
             // Força o início da conferência para restaurar as seções
-            // O updateSummaryDisplay é chamado dentro de startConference()
             startConference(true); 
         } else {
-            // Se não estava iniciada, apenas atualiza os inputs da nota (populateNotaInputs)
-            // e garante que o botão 'Iniciar' está no estado correto (checkStartConferenceButton)
             updateSummaryDisplay();
         }
 
@@ -228,7 +221,7 @@ function populateNotaInputs() {
         input.min = '0';
         input.required = true;
         
-        // Carrega valor do estado e garante que seja número
+        // Carrega valor do estado
         const savedValue = notaQuantities[produto];
         if (savedValue && parseFloat(savedValue) > 0) {
              input.value = parseFloat(savedValue);
@@ -281,7 +274,7 @@ function startConference(isRestoring = false) {
     document.querySelectorAll('#nota-input-section input, #user-info-section select').forEach(el => el.disabled = true);
     startConferenceBtn.style.display = 'none';
 
-    // 2. Prepara o objeto de conferência (NÃO chama initializeConferenceEntries se estiver restaurando)
+    // 2. Prepara o objeto de conferência (se não estiver restaurando)
     if (!isRestoring) {
         initializeConferenceEntries();
     }
@@ -347,7 +340,7 @@ function updateSummaryDisplay() {
         const notaKg = parseFloat(notaQuantities[produto]) || 0;
         const conferidoKg = parseFloat(conferenceEntries[produto]) || 0;
         
-        // Exibe apenas produtos com KG na nota ou já conferidos (após o início)
+        // Exibe apenas produtos com KG na nota ou já conferidos
         if (notaKg > 0 || conferidoKg > 0) {
             hasData = true;
             const diferenca = conferidoKg - notaKg;
@@ -397,7 +390,7 @@ function updateSummaryDisplay() {
 }
 
 // -----------------------------------------------------------------
-// Lógica de Relatório (PDF c/ AutoTable e CSV) - Funções inalteradas, mas dependem dos dados persistidos
+// Lógica de Relatório (PDF c/ AutoTable e CSV)
 // -----------------------------------------------------------------
 
 /**
@@ -456,17 +449,21 @@ function getConferenceReportData() {
  * @returns {object} O objeto 'doc' do jsPDF.
  */
 function generateConferencePdf(data) {
-    // CORREÇÃO: Acessa e instancia a classe jsPDF diretamente do objeto global
+    // 1. Verifica se a biblioteca jsPDF principal está carregada
     if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
         alert("Erro: A biblioteca jsPDF não foi carregada.");
         return null;
     }
-    if (typeof window.jspdf.plugin.autotable === 'undefined') {
-         alert("Erro: A biblioteca jsPDF-AutoTable não foi carregada.");
+    
+    // 2. Cria a instância do documento
+    const doc = new window.jspdf.jsPDF(); // CORRIGIDO: Instancia diretamente do global
+
+    // 3. NOVO CHECK: Verifica se o plugin autoTable foi carregado (método autoTable no documento)
+    if (typeof doc.autoTable === 'undefined') {
+        alert("Erro: O plugin jsPDF-AutoTable não foi carregado. Verifique a ordem dos scripts no HTML.");
         return null;
     }
-
-    const doc = new window.jspdf.jsPDF(); // Linha CORRIGIDA
+    
     let startY = 20;
 
     // === CABEÇALHO ===
@@ -675,8 +672,6 @@ function resetConference() {
     
     // 3. Reseta a interface (mesma lógica anterior)
     document.querySelectorAll('#nota-input-section input, #user-info-section select').forEach(el => el.disabled = false);
-    
-    // O populateNotaInputs() é chamado a seguir para limpar os inputs
     
     // Reseta selects de usuário (loadAndPopulateDropdowns faz isso)
     loadAndPopulateDropdowns(); 
