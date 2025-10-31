@@ -1,3 +1,9 @@
+/* ========================================================================
+ * ARQUIVO: calculadora-cd.js
+ * DESCRIÇÃO: Lógica exclusiva para a página calculadora-cd.html.
+ * ========================================================================
+ */
+
 // ==================== ESTRUTURA DE DADOS (CALCULADORA) ====================
 const APP_DATA = {
     // Entregadores (lista independente)
@@ -9,6 +15,14 @@ const APP_DATA = {
         "Cleiton"
     ]
 };
+
+// === INSTRUÇÃO PARA MELHORIA DA QUALIDADE DA LOGO ===
+// Para garantir a mais alta qualidade no PDF, a logo deve ser convertida
+// para Base64 (preferencialmente de uma imagem PNG de alta resolução - 300 DPI).
+// Por favor, substitua a string vazia abaixo pela string Base64 completa da sua logo.
+// Exemplo: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABAAAAADxCAIAAA...'
+const LOGO_BASE64_IMAGE = ""; // <--- COLOQUE A STRING BASE64 AQUI
+// ===================================================
 
 // ================= MENU HAMBÚRGUER e VOLTAR AO TOPO (Estrutura Preservada) =================
 const menuToggle = document.querySelector('.menu-toggle');
@@ -379,7 +393,7 @@ function generateProfessionalPdf(data) {
     // 2. Cria a instância do documento
     const doc = new window.jspdf.jsPDF(); 
 
-    // 3. Verifica se o plugin autoTable foi carregado (CORREÇÃO DO ERRO)
+    // 3. Verifica se o plugin autoTable foi carregado
     if (typeof doc.autoTable === 'undefined') {
         alert("Erro: O plugin jsPDF-AutoTable não foi carregado. Verifique a ordem dos scripts no HTML.");
         return null;
@@ -388,16 +402,22 @@ function generateProfessionalPdf(data) {
     let startY = 20; 
     const margin = 14; 
 
-    // === INSERÇÃO DA LOGOMARCA ===
-    const logoPath = './images/logo-qdelicia.png';
+    // === INSERÇÃO DA LOGOMARCA (Revisado para Base64 de alta qualidade) ===
     const logoWidth = 30; 
     const logoHeight = 8; 
 
-    try {
-        doc.addImage(logoPath, 'PNG', margin, 14, logoWidth, logoHeight); 
-    } catch (e) {
-        console.warn("Não foi possível carregar a logomarca no PDF.", e);
+    if (LOGO_BASE64_IMAGE) {
+        try {
+            // Usando Base64 para garantir a mais alta qualidade e carregamento.
+            doc.addImage(LOGO_BASE64_IMAGE, 'PNG', margin, 14, logoWidth, logoHeight); 
+        } catch (e) {
+            console.warn("Não foi possível carregar a logomarca Base64 no PDF. Verifique se a string está correta.", e);
+        }
+    } else {
+         // Se o Base64 não for fornecido, apenas avisa para não quebrar a funcionalidade
+         console.warn("LOGO_BASE64_IMAGE não fornecida. O PDF será gerado sem a logomarca no cabeçalho.");
     }
+    // === FIM DA INSERÇÃO DA LOGOMARCA ===
     
     // Ajusta o Y inicial para acomodar a logo
     startY = 32; 
