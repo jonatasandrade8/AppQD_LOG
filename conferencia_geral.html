@@ -33,28 +33,31 @@
         <h1>Conferência Geral - Lojas</h1>
     </header>
 
-    <main class="container">
+     <main class="calculator-main">
         
-        <section id="user-info-section" class="calculator-section">
-            <h2>1. Dados Iniciais</h2>
-            <div class="input-group-inline">
-                <label for="select-entregador">Entregador/Motorista:</label>
-                <select id="select-entregador" required>
-                    <option value="" disabled selected>Selecione o Entregador</option>
-                </select>
+        <section id="user-info-section" class="calculator-section input-box">
+            <h2>1. Informações da Conferência</h2>
+            <div class="input-group">
+                <label for="select-conferente"><i class="fas fa-user-check"></i> Seu Nome:</label>
+                <select id="select-conferente" required></select>
             </div>
-            <div class="input-group-inline">
-                <label for="select-rede">Rede:</label>
-                <select id="select-rede" required>
-                    <option value="" disabled selected>Selecione a Rede</option>
-                </select>
+            <div class="input-group">
+                <label for="select-rede"><i class="fas fa-store"></i> Cliente/Rede:</label>
+                <select id="select-rede" required></select>
             </div>
-            <div class="input-group-inline">
-                <label for="select-loja">Loja:</label>
-                <select id="select-loja" required>
-                    <option value="" disabled selected>Selecione a Loja</option>
-                </select>
+            <div class="input-group">
+                <label for="select-loja"><i class="fas fa-map-marker-alt"></i> Loja/PDV:</label>
+                <select id="select-loja" required disabled></select>
             </div>
+        </section>
+
+
+        <section id="nota-input-section" class="calculator-section input-box">
+            <h2>2. Notas Fiscais (KG)</h2>
+            <p>Insira a quantidade em kg para cada produto da nota fiscal.</p>
+            <div id="product-targets-grid" class="product-targets-grid">
+                </div>
+            <button id="start-conference-btn" class="action-btn primary-btn" disabled>Iniciar Conferência</button>
         </section>
 
         <section id="nota-inputs-section" class="calculator-section" style="display: none;">
