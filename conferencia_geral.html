@@ -5,24 +5,119 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Página de Conferência Geral de Produtos - Logística Qdelícia">
     <title>Conferência Geral - Logística Qdelícia</title>
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="./style.css"> 
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    </head>
+<style>
+ 
+/* ===================== ESTILIZAÇÃO PARA TABELAS (CALCULADORA CD E CONFERÊNCIA) ===================== */
 
-</head>
-<body>
+/* ... (Estilos de tabela existentes) ... */
+
+.missing-value { /* FALTA */
+    color: var(--primary-color); 
+    font-weight: 700;
+}
+
+.excess-value { /* SOBRA (NOVO) */
+    color: #ff9800; /* Laranja para Sobra/Excesso */
+    font-weight: 700;
+}
+
+.ok-value { /* OK */
+    color: #25d366; /* Verde WhatsApp */
+    font-weight: 700;
+}
+
+.status-missing {
+    background-color: rgba(93, 63, 211, 0.1); /* Fundo suave com cor primária (Falta) */
+    color: var(--primary-color);
+    font-weight: 600;
+    padding: 2px 5px;
+    border-radius: 4px;
+}
+
+.status-excess { /* NOVO */
+    background-color: rgba(255, 152, 0, 0.1); /* Fundo suave com laranja (Sobra) */
+    color: #ff9800;
+    font-weight: 600;
+    padding: 2px 5px;
+    border-radius: 4px;
+}
+
+.status-ok {
+    background-color: rgba(37, 211, 102, 0.1); /* Fundo suave com verde (OK) */
+    color: #25d366;
+    font-weight: 600;
+    padding: 2px 5px;
+    border-radius: 4px;
+}
+
+.total-row td {
+    font-weight: 700;
+    background-color: var(--bg-light);
+    border-top: 2px solid var(--primary-color) !important;
+}
+
+
+/* ===================== ESTILIZAÇÃO PARA CAMPOS INLINE (RELATÓRIO DE CONFERÊNCIA) ===================== */
+
+.product-targets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Reduzi a largura mínima */
+    gap: 15px;
+    margin-top: 20px;
+    padding: 10px;
+    border: 1px solid var(--tertiary-color);
+    border-radius: var(--border-radius);
+    background-color: var(--bg-light);
+}
+
+.input-group-inline {
+    display: flex;
+    flex-direction: column;
+}
+
+.input-group-inline label {
+    font-size: 0.85em; /* Reduzi o tamanho da fonte */
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: var(--text-dark);
+}
+
+/* Estilo do INPUT, replicando o padrão de camera_devolucao */
+.input-group-inline input[type="number"] {
+    padding: 8px 10px; /* Reduzi o padding */
+    border: 2px solid var(--tertiary-color);
+    border-radius: var(--border-radius);
+    font-size: 0.9rem; /* Reduzi o tamanho da fonte */
+    color: var(--text-dark);
+    background-color: var(--white);
+    outline: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.input-group-inline input[type="number"]:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(93, 63, 211, 0.2); 
+}
+
+
+
+</style>
+<body class="calculator-page">
     
     <div class="menu-overlay"></div>
     <aside class="side-menu">
-        <a href="index.html"> Início</a>
-        <a href="faltas_devolucoes.html"> Faltas</a>
-        <a href="camera_geral.html"> Registrar</a>
-        <a href="camera_devolucao.html" > Devolução</a>
-        <a href="calculadora-cd.html">Conferência-CD</a>
-        <a href="conferencia_geral.html" class="active">Conferência-Lojas</a>
+        <a href="index.html"><i class="fas fa-home"></i> Início</a>
+        <a href="faltas_devolucoes.html"><i class="fas fa-receipt"></i> Faltas</a>
+        <a href="camera_geral.html"><i class="fas fa-camera"></i> Registrar</a>
+        <a href="camera_devolucao.html"><i class="fas fa-ban"></i> Devolução</a>
+        <a href="calculadora-cd.html">✔ Calculadora CD</a>
+        <a href="conferencia_geral.html" class="active">✔ Conferência</a>
     </aside>
 
     <header id="cabecalho-principal">
@@ -30,64 +125,71 @@
             <i class="fas fa-bars"></i>
         </button>
         <div class="logo-placeholder">
-            <img src="./images/logo-qdelicia.png" alt="Logomarca Qdelícia Frutas">
+            <img src="./images/logo-qdelicia.png" alt="Logomarca Qdelícia Frutas"> 
         </div>
-        <h1>Conferência de Lojas</h1>
+        <h1>Conferência Geral</h1>
+        <p>Registro e Acompanhamento</p>
     </header>
-     <nav>
+
+    <nav>
         <a href="index.html">Início</a>
         <a href="faltas_devolucoes.html"> Faltas</a>
         <a href="camera_geral.html"> Registrar</a>
         <a href="camera_devolucao.html" > Devolução</a>
         <a href="calculadora-cd.html"> Calculadora CD</a>
-        <a href="conferencia_geral.html"class="active"> Conferência</a>
+        <a href="conferencia_geral.html" class="active">✔ Conferência</a>
     </nav>
-    <main class="container">
+
+    <main class="calculator-main">
         
-        <section id="user-info-section" class="calculator-section">
-            <h2>1. Dados Iniciais</h2>
+        <section id="user-info-section" class="calculator-section input-box">
+            <h2>1. Informações da Conferência</h2>
             <div class="input-group">
-                <label for="select-conferente">Conferente:</label>
+                <label for="select-conferente"><i class="fas fa-user-check"></i> Seu Nome:</label>
                 <select id="select-conferente" required></select>
             </div>
             <div class="input-group">
-                <label for="select-rede">Rede/Cliente:</label>
+                <label for="select-rede"><i class="fas fa-store"></i> Cliente/Rede:</label>
                 <select id="select-rede" required></select>
             </div>
             <div class="input-group">
-                <label for="select-loja">Loja/PDV:</label>
-                <select id="select-loja" disabled required></select>
+                <label for="select-loja"><i class="fas fa-map-marker-alt"></i> Loja/PDV:</label>
+                <select id="select-loja" required disabled></select>
             </div>
         </section>
 
-        <section id="nota-input-section" class="calculator-section">
-            <h2>2. KG da Nota Fiscal (NF)</h2>
-            <div id="product-targets-grid" class="input-grid">
+
+        <section id="nota-input-section" class="calculator-section input-box">
+            <h2>2. Notas Fiscais (KG)</h2>
+            <p>Insira a quantidade em kg para cada produto da nota fiscal.</p>
+            <div id="product-targets-grid" class="product-targets-grid">
                 </div>
-            <button id="start-conference-btn" class="action-btn primary-btn" disabled>Preencha todos os campos</button>
+            <button id="start-conference-btn" class="action-btn primary-btn" disabled>Iniciar Conferência</button>
         </section>
 
-        <section id="conference-input-section" class="calculator-section" style="display: none;">
+
+        <section id="conference-input-section" class="calculator-section input-box" style="display: none;">
             <h2>3. Lançamento da Conferência</h2>
+            <p>Insira a quantidade *real* em kg que está sendo conferida.</p>
             <div class="input-group">
-                <label for="select-product-conference">Produto:</label>
+                <label for="select-product-conference"><i class="fas fa-box"></i> Produto:</label>
                 <select id="select-product-conference" required></select>
             </div>
-            <div class="input-group-inline">
-                <label for="input-kg-conference">KG Conferido:</label>
-                <input type="number" id="input-kg-conference" placeholder="0.00" step="0.01" min="0" required>
-                <button id="add-conference-btn" class="action-btn secondary-btn" disabled><i class="fas fa-plus"></i> Adicionar</button>
+            <div class="input-group">
+                <label for="input-kg-conference"><i class="fas fa-weight"></i> Quantidade Conferida (KG):</label>
+                <input type="number" id="input-kg-conference" placeholder="Ex: 50.5" step="0.01" required>
             </div>
+            <button id="add-conference-btn" class="action-btn secondary-btn" disabled>Adicionar Item</button>
         </section>
+        
+        <section id="conference-summary-section" class="calculator-section summary-box" style="display: none;">
+            <h2>4. Resumo e Diferença</h2>
+            
+            <div id="conference-report-content"> 
+                <p class="summary-info"><strong>Conferente:</strong> <span id="summary-conferente"></span></p>
+                <p class="summary-info"><strong>Rede/Loja:</strong> <span id="summary-rede-loja"></span></p>
 
-        <section id="conference-summary-section" class="calculator-section" style="display: none;">
-            <h2>4. Resumo da Conferência</h2>
-            <div class="summary-header">
-                <p><strong>Conferente:</strong> <span id="summary-conferente"></span></p>
-                <p><strong>Local:</strong> <span id="summary-rede-loja"></span></p>
-            </div>
-
-            <div class="table-container">
+                <h3>Detalhamento (Nota vs. Conferido)</h3>
                 <table id="conference-summary-table" class="discharge-table">
                     <thead>
                         <tr>
@@ -104,12 +206,12 @@
             </div>
 
             <div class="report-buttons">
-                <button id="share-pdf-btn" class="action-btn primary-btn" disabled><i class="fab fa-whatsapp"></i> Compartilhar PDF</button>
-                <button id="share-csv-btn" class="action-btn primary-btn" disabled><i class="fab fa-whatsapp"></i> Compartilhar CSV</button>
-                <button id="download-pdf-btn" class="action-btn secondary-btn" disabled><i class="fas fa-file-pdf"></i> Baixar PDF</button>
+                <button id="share-pdf-btn" class="action-btn primary-btn"><i class="fab fa-whatsapp"></i> Compartilhar PDF</button>
+                <button id="share-csv-btn" class="action-btn primary-btn"><i class="fab fa-whatsapp"></i> Compartilhar CSV</button>
+                <button id="download-pdf-btn" class="action-btn secondary-btn"><i class="fas fa-file-pdf"></i> Baixar PDF</button>
             </div>
             <button id="reset-conference-btn" class="action-btn secondary-btn" style="margin-top: 10px;">Reiniciar Conferência</button>
-        </section>
+            </section>
 
     </main>
     
