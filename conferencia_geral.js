@@ -1,10 +1,4 @@
-// =======================================================================
-// ARQUIVO: conferencia_geral.js
-// DESCRIÇÃO: Lógica para a página de Conferência Geral de Produtos.
-// Inclui persistência de estado (localStorage) e geração de PDF/CSV.
-// =======================================================================
-
-// ==================== ESTRUTURA DE DADOS ====================
+// ==================== ESTRUTURA DE DADOS (CÓPIA DE script.js) ====================
 const APP_DATA = {
     // Entregadores (lista independente)
     ENTREGADORES: [
@@ -35,44 +29,36 @@ const APP_DATA = {
     ],
 };
 
+// =================== CONFIGURAÇÃO DA LOGO EM BASE64 ===================
+// Para garantir a mais alta qualidade no PDF, a logo deve ser convertida
+// para Base64 (preferencialmente de uma imagem PNG de alta resolução - 300 DPI).
+// SUBSTITUA A STRING VAZIA ABAIXO PELA SUA STRING BASE64 COMPLETA.
+const LOGO_BASE64_IMAGE = ""; // <--- COLOQUE A STRING BASE64 AQUI
+// =====================================================================
+
 const localStorageKeyConference = 'qdelicia_logistica_conference'; 
-const localStorageKeyConferenceState = 'qdelicia_logistica_conference_state'; 
 
 // ==================== VARIÁVEIS DE ESTADO ====================
-let notaQuantities = {}; 
-let conferenceEntries = {}; 
-
-/**
- * @description Inicializa conferenceEntries com 0 para todos os produtos que estão na nota.
- */
-function initializeConferenceEntries() {
-    conferenceEntries = {};
-    APP_DATA.PRODUTOS_CONFERENCIA.forEach(produto => {
-        if(notaQuantities[produto] && parseFloat(notaQuantities[produto]) > 0) {
-            conferenceEntries[produto] = 0;
-        }
-    });
-}
-
+let conferenceData = {
+    entregador: "",
+    rede: "",
+    loja: "",
+    notaFiscal: "",
+    produtos: {} // { produto: { kgNota: 0, kgConferido: 0 } }
+};
 
 // ==================== ELEMENTOS DA INTERFACE ====================
-const selectConferente = document.getElementById('select-conferente');
-const selectRede = document.getElementById('select-rede'); 
-const selectLoja = document.getElementById('select-loja'); 
+const selectEntregador = document.getElementById('select-entregador');
+const selectRede = document.getElementById('select-rede');
+const selectLoja = document.getElementById('select-loja');
+const inputNotaFiscal = document.getElementById('input-nota-fiscal');
+const notaInputsSection = document.getElementById('nota-inputs-section');
 
-const notaInputSection = document.getElementById('nota-input-section');
-const productTargetsGrid = document.getElementById('product-targets-grid');
-const startConferenceBtn = document.getElementById('start-conference-btn');
-
-const conferenceInputSection = document.getElementById('conference-input-section');
 const selectProductConference = document.getElementById('select-product-conference');
-const inputKgConference = document.getElementById('input-kg-conference');
+const inputKgNota = document.getElementById('input-kg-nota');
+const inputKgConference = document.getElementById('input-kg-conferido');
 const addConferenceBtn = document.getElementById('add-conference-btn');
-
-const conferenceSummarySection = document.getElementById('conference-summary-section');
-const conferenceSummaryTableBody = conferenceSummarySection ? conferenceSummarySection.querySelector('tbody') : null;
-const summaryConferente = document.getElementById('summary-conferente');
-const summaryRedeLoja = document.getElementById('summary-rede-loja');
+const conferenceSummaryTableBody = document.getElementById('conference-summary-body');
 
 const downloadPdfBtn = document.getElementById('download-pdf-btn');
 const sharePdfBtn = document.getElementById('share-pdf-btn');
@@ -80,20 +66,14 @@ const shareCsvBtn = document.getElementById('share-csv-btn');
 const resetConferenceBtn = document.getElementById('reset-conference-btn');
 
 
-// ==================== FUNÇÕES UTILS E DROPDOWNS ====================
+// ==================== FUNÇÕES UTILITÁRIAS ====================
 
-function saveSelection() {
-    const selection = {
-        conferente: selectConferente ? selectConferente.value : '',
-        rede: selectRede ? selectRede.value : '',
-        loja: selectLoja ? selectLoja.value : '',
-    };
-    localStorage.setItem(localStorageKeyConference, JSON.stringify(selection));
-    checkStartConferenceButton();
-}
-
+/**
+ * @description Preenche um select box com dados de um array.
+ */
 function populateSelect(selectElement, data, placeholder) {
     if (!selectElement) return;
+    
     selectElement.innerHTML = `<option value="" disabled selected>${placeholder}</option>`;
     
     if (Array.isArray(data)) {
@@ -113,384 +93,338 @@ function populateSelect(selectElement, data, placeholder) {
     }
 }
 
-function populateLoja(rede) {
-    if (!selectLoja) return;
-    selectLoja.innerHTML = '<option value="" disabled selected>Selecione a Loja/PDV</option>';
-
-    if (rede && APP_DATA.REDES_LOJAS[rede]) {
-        APP_DATA.REDES_LOJAS[rede].forEach(loja => {
-            const option = document.createElement('option');
-            option.value = loja;
-            option.textContent = loja;
-            selectLoja.appendChild(option);
-        });
-        selectLoja.disabled = false;
-    } else {
-        selectLoja.disabled = true;
-    }
-}
-
+/**
+ * @description Carrega dados do localStorage (se houver) e preenche os dropdowns.
+ */
 function loadAndPopulateDropdowns() {
-    populateSelect(selectConferente, APP_DATA.ENTREGADORES, "Selecione o Conferente");
-    populateSelect(selectRede, APP_DATA.REDES_LOJAS, "Selecione a Rede/Cliente");
+    // 1. Preenche Entregadores
+    populateSelect(selectEntregador, APP_DATA.ENTREGADORES, "Selecione o Entregador");
+    // 2. Preenche Redes
+    populateSelect(selectRede, Object.keys(APP_DATA.REDES_LOJAS), "Selecione a Rede");
+    // 3. Preenche Produtos
+    populateSelect(selectProductConference, APP_DATA.PRODUTOS_CONFERENCIA, "Selecione o Produto");
 
-    if (selectLoja) {
-          selectLoja.innerHTML = '<option value="" disabled selected>Selecione a Loja/PDV</option>';
-          selectLoja.disabled = true;
-    }
-
-    const savedSelection = JSON.parse(localStorage.getItem(localStorageKeyConference));
-
-    if (savedSelection) {
-        if (selectConferente && savedSelection.conferente) selectConferente.value = savedSelection.conferente;
-        if (selectRede && savedSelection.rede) {
-            selectRede.value = savedSelection.rede;
-            populateLoja(savedSelection.rede); 
-            if (selectLoja && savedSelection.loja) selectLoja.value = savedSelection.loja;
-        }
-    }
-    
-    checkStartConferenceButton();
-}
-
-// ==================== FUNÇÕES DE PERSISTÊNCIA DE ESTADO ====================
-
-/**
- * @description Salva o estado completo da conferência no localStorage.
- */
-function saveConferenceState() {
-    const state = {
-        notaQuantities: notaQuantities,
-        conferenceEntries: conferenceEntries,
-        isConferenceStarted: conferenceInputSection.style.display === 'block'
-    };
-    localStorage.setItem(localStorageKeyConferenceState, JSON.stringify(state));
-}
-
-/**
- * @description Carrega o estado completo da conferência do localStorage e restaura a UI.
- */
-function loadConferenceState() {
-    const savedState = localStorage.getItem(localStorageKeyConferenceState);
-    if (!savedState) return;
-
-    try {
-        const state = JSON.parse(savedState);
+    // 4. Carrega estado salvo
+    const savedData = localStorage.getItem(localStorageKeyConference);
+    if (savedData) {
+        conferenceData = JSON.parse(savedData);
+        // Restaura a interface de usuário (seção de inputs)
+        if (selectEntregador) selectEntregador.value = conferenceData.entregador;
+        if (selectRede) selectRede.value = conferenceData.rede;
         
-        notaQuantities = state.notaQuantities || {};
-        conferenceEntries = state.conferenceEntries || {};
-
-        if (state.isConferenceStarted) {
-            startConferenceBtn.disabled = false;
-            startConference(true); 
-        } else {
-            updateSummaryDisplay();
+        // Dispara o preenchimento da loja
+        if (selectRede && selectLoja) {
+            handleRedeChange(); 
+            selectLoja.value = conferenceData.loja;
         }
 
-    } catch (e) {
-        console.error("Erro ao carregar estado da conferência:", e);
-        localStorage.removeItem(localStorageKeyConferenceState);
-    }
-}
-
-
-// ==================== LÓGICA ESPECÍFICA DA CONFERÊNCIA ====================
-
-/**
- * @description Injeta dinamicamente os inputs de KG da Nota Fiscal.
- */
-function populateNotaInputs() {
-    if (!productTargetsGrid) return;
-    productTargetsGrid.innerHTML = '';
-
-    APP_DATA.PRODUTOS_CONFERENCIA.forEach(produto => {
-        const inputGroup = document.createElement('div');
-        inputGroup.classList.add('input-group-inline');
+        if (inputNotaFiscal) inputNotaFiscal.value = conferenceData.notaFiscal;
         
-        const label = document.createElement('label');
-        label.textContent = `${produto} (KG):`;
-
-        const input = document.createElement('input');
-        input.type = 'number';
-        input.id = `input-nota-${produto.toLowerCase()}`;
-        input.placeholder = '0.00';
-        input.step = '0.01';
-        input.min = '0';
-        input.required = true;
-        
-        const savedValue = notaQuantities[produto];
-        if (savedValue && parseFloat(savedValue) > 0) {
-             input.value = parseFloat(savedValue);
-        } else {
-             input.value = '';
-        }
-        
-        input.addEventListener('input', () => {
-            notaQuantities[produto] = parseFloat(input.value) || 0;
-            
-            saveConferenceState(); 
-            checkStartConferenceButton();
-            updateSummaryDisplay();
-        });
-
-        inputGroup.appendChild(label);
-        inputGroup.appendChild(input);
-        productTargetsGrid.appendChild(inputGroup);
-    });
-}
-
-/**
- * @description Verifica se os campos iniciais estão preenchidos para liberar o botão 'Iniciar Conferência'.
- */
-function checkStartConferenceButton() {
-    const isUserInfoReady = selectConferente && selectConferente.value && 
-                            selectRede && selectRede.value && 
-                            selectLoja && selectLoja.value;
-
-    const hasNotaEntry = Object.values(notaQuantities).some(val => parseFloat(val) > 0);
-    
-    if (isUserInfoReady && hasNotaEntry) {
-        startConferenceBtn.disabled = false;
-        startConferenceBtn.textContent = 'Iniciar Conferência';
-    } else {
-        startConferenceBtn.disabled = true;
-        startConferenceBtn.textContent = 'Preencha todos os campos';
+        // Garante que os campos de inputs estejam visíveis e atualizados
+        updateNotaInputsVisibility();
+        updateConferenceSummary();
     }
 }
 
 /**
- * @description Prepara a interface para o lançamento da conferência.
- * @param {boolean} isRestoring - Indica se a função foi chamada ao restaurar o estado.
+ * @description Salva o estado atual da conferência no localStorage.
  */
-function startConference(isRestoring = false) {
-    document.querySelectorAll('#nota-input-section input, #user-info-section select').forEach(el => el.disabled = true);
-    startConferenceBtn.style.display = 'none';
-
-    if (!isRestoring) {
-        initializeConferenceEntries();
-    }
+function saveConferenceData() {
+    // Atualiza os dados de estado antes de salvar
+    conferenceData.entregador = selectEntregador.value;
+    conferenceData.rede = selectRede.value;
+    conferenceData.loja = selectLoja.value;
+    conferenceData.notaFiscal = inputNotaFiscal.value;
     
-    conferenceInputSection.style.display = 'block';
-    conferenceSummarySection.style.display = 'block';
+    localStorage.setItem(localStorageKeyConference, JSON.stringify(conferenceData));
     
-    const availableProducts = APP_DATA.PRODUTOS_CONFERENCIA.filter(p => notaQuantities[p] && parseFloat(notaQuantities[p]) > 0);
-    populateSelect(selectProductConference, availableProducts, "Selecione o Produto para conferir");
-    selectProductConference.value = ''; 
-    
-    updateSummaryDisplay();
-    saveConferenceState();
-}
-
-/**
- * @description Adiciona um lançamento de conferência.
- */
-function addConferenceEntry() {
-    const produto = selectProductConference.value;
-    const kg = parseFloat(inputKgConference.value);
-
-    if (!produto || isNaN(kg) || kg < 0) {
-        alert("Por favor, selecione um produto e insira uma quantidade válida.");
-        return;
-    }
-
-    conferenceEntries[produto] = (conferenceEntries[produto] || 0) + kg;
-
-    selectProductConference.value = '';
-    inputKgConference.value = '';
-    addConferenceBtn.disabled = true;
-
-    updateSummaryDisplay();
-    saveConferenceState();
-}
-
-/**
- * @description Atualiza a tabela de resumo e a diferença (falta).
- */
-function updateSummaryDisplay() {
-    if (!conferenceSummaryTableBody) return;
-
-    summaryConferente.textContent = selectConferente.value || 'N/A';
-    summaryRedeLoja.textContent = (selectRede.value && selectLoja.value) ? `${selectRede.value} / ${selectLoja.value}` : 'N/A';
-    
-    conferenceSummaryTableBody.innerHTML = '';
-
-    let totalNota = 0;
-    let totalConferido = 0;
-    let totalDiferenca = 0;
-    let hasData = false;
-
-    APP_DATA.PRODUTOS_CONFERENCIA.forEach(produto => {
-        const notaKg = parseFloat(notaQuantities[produto]) || 0;
-        const conferidoKg = parseFloat(conferenceEntries[produto]) || 0;
-        
-        if (notaKg > 0 || conferidoKg > 0) {
-            hasData = true;
-            const diferenca = conferidoKg - notaKg;
-            const statusText = diferenca === 0 ? 'OK' : (diferenca < 0 ? 'Falta' : 'Sobra');
-            const statusClass = diferenca === 0 ? 'status-ok' : (diferenca < 0 ? 'status-missing' : 'status-excess');
-            
-            const row = conferenceSummaryTableBody.insertRow();
-            
-            row.insertCell().textContent = produto;
-            row.insertCell().textContent = notaKg.toFixed(2);
-            row.insertCell().textContent = conferidoKg.toFixed(2);
-            
-            const diferencaCell = row.insertCell();
-            diferencaCell.textContent = diferenca.toFixed(2);
-            diferencaCell.classList.add(diferenca < 0 ? 'missing-value' : (diferenca > 0 ? 'excess-value' : 'ok-value'));
-            
-            const statusCell = row.insertCell();
-            statusCell.textContent = statusText;
-            statusCell.classList.add(statusClass);
-
-            totalNota += notaKg;
-            totalConferido += conferidoKg;
-            totalDiferenca += diferenca;
-        }
-    });
-
-    if (totalNota > 0 || totalConferido > 0) {
-        const totalRow = conferenceSummaryTableBody.insertRow();
-        totalRow.classList.add('total-row');
-        
-        totalRow.insertCell().textContent = 'TOTAL';
-        totalRow.insertCell().textContent = totalNota.toFixed(2);
-        totalRow.insertCell().textContent = totalConferido.toFixed(2);
-        
-        const totalDiferencaCell = totalRow.insertCell();
-        totalDiferencaCell.textContent = totalDiferenca.toFixed(2);
-        totalDiferencaCell.classList.add(totalDiferenca < 0 ? 'missing-value' : (totalDiferenca > 0 ? 'excess-value' : 'ok-value'));
-        
-        totalRow.insertCell().textContent = totalDiferenca === 0 ? 'OK' : (totalDiferenca < 0 ? 'FALTA' : 'SOBRA');
-    }
-    
+    // Atualiza estado dos botões de relatório
+    const hasData = Object.keys(conferenceData.produtos).length > 0;
     if (downloadPdfBtn) downloadPdfBtn.disabled = !hasData;
     if (sharePdfBtn) sharePdfBtn.disabled = !hasData;
     if (shareCsvBtn) shareCsvBtn.disabled = !hasData;
 }
 
-// -----------------------------------------------------------------
-// Lógica de Relatório (PDF c/ AutoTable e CSV)
-// -----------------------------------------------------------------
+
+// ==================== LÓGICA DE CONFERÊNCIA ====================
+
+/**
+ * @description Adiciona ou atualiza um item de conferência.
+ */
+function addOrUpdateConference() {
+    const produto = selectProductConference.value;
+    const kgNota = parseFloat(inputKgNota.value) || 0;
+    const kgConferido = parseFloat(inputKgConference.value) || 0;
+
+    if (!produto || kgNota <= 0 || kgConferido < 0) {
+        alert("Por favor, preencha o produto, o KG da Nota (deve ser > 0) e o KG Conferido (deve ser >= 0) com valores válidos.");
+        return;
+    }
+
+    conferenceData.produtos[produto] = {
+        kgNota: kgNota,
+        kgConferido: kgConferido,
+    };
+
+    // Limpa os inputs
+    selectProductConference.value = "";
+    inputKgNota.value = "";
+    inputKgConference.value = "";
+    addConferenceBtn.disabled = true;
+
+    // Salva e atualiza o resumo
+    saveConferenceData();
+    updateConferenceSummary();
+}
+
+/**
+ * @description Atualiza a tabela de resumo da conferência na interface.
+ */
+function updateConferenceSummary() {
+    conferenceSummaryTableBody.innerHTML = '';
+    const produtos = Object.keys(conferenceData.produtos).sort();
+    
+    let totalKgNota = 0;
+    let totalKgConferido = 0;
+
+    produtos.forEach(produto => {
+        const item = conferenceData.produtos[produto];
+        const diferenca = item.kgConferido - item.kgNota;
+        const diferencaAbs = Math.abs(diferenca).toFixed(2);
+        
+        let status = 'OK';
+        let statusClass = 'ok-value';
+
+        if (diferenca > 5) { // Tolerância de 5kg para excesso
+            status = `SOBRA ${diferencaAbs} KG`;
+            statusClass = 'excess-value';
+        } else if (diferenca < -5) { // Tolerância de 5kg para falta
+            status = `FALTA ${diferencaAbs} KG`;
+            statusClass = 'missing-value';
+        }
+
+        totalKgNota += item.kgNota;
+        totalKgConferido += item.kgConferido;
+
+        const row = conferenceSummaryTableBody.insertRow();
+        row.insertCell().textContent = produto;
+        row.insertCell().textContent = item.kgNota.toFixed(2);
+        row.insertCell().textContent = item.kgConferido.toFixed(2);
+        
+        const diferencaCell = row.insertCell();
+        diferencaCell.textContent = diferenca.toFixed(2);
+        
+        const statusCell = row.insertCell();
+        statusCell.innerHTML = `<span class="${statusClass}">${status}</span>`;
+
+        // Botão de Excluir
+        const deleteCell = row.insertCell();
+        const deleteBtn = document.createElement('button');
+        deleteBtn.classList.add('delete-pallet-btn');
+        deleteBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+        deleteBtn.onclick = () => {
+            delete conferenceData.produtos[produto];
+            saveConferenceData();
+            updateConferenceSummary();
+        };
+        deleteCell.appendChild(deleteBtn);
+    });
+
+    // Adiciona a linha de totais
+    const totalRow = conferenceSummaryTableBody.insertRow();
+    totalRow.style.fontWeight = 'bold';
+    totalRow.insertCell().textContent = 'TOTAIS GERAIS';
+    totalRow.insertCell().textContent = totalKgNota.toFixed(2);
+    totalRow.insertCell().textContent = totalKgConferido.toFixed(2);
+    
+    const totalDiferenca = totalKgConferido - totalKgNota;
+    const totalDiferencaCell = totalRow.insertCell();
+    totalDiferencaCell.textContent = totalDiferenca.toFixed(2);
+    
+    const totalStatusCell = totalRow.insertCell();
+    totalStatusCell.textContent = ''; // Status total não é necessário para o PDF
+    
+    totalRow.insertCell(); // Coluna do botão de excluir
+    
+    saveConferenceData(); // Salva novamente para atualizar o estado do botão de relatório
+}
+
+/**
+ * @description Zera todos os dados e reinicia a conferência.
+ */
+function resetConference() {
+    if (confirm("Tem certeza de que deseja zerar todos os dados da conferência e reiniciar?")) {
+        conferenceData = {
+            entregador: "",
+            rede: "",
+            loja: "",
+            notaFiscal: "",
+            produtos: {}
+        };
+        localStorage.removeItem(localStorageKeyConference);
+        
+        // Reset da interface
+        if (selectEntregador) selectEntregador.value = "";
+        if (selectRede) selectRede.value = "";
+        if (selectLoja) selectLoja.innerHTML = `<option value="" disabled selected>Selecione a Loja</option>`;
+        if (inputNotaFiscal) inputNotaFiscal.value = "";
+        
+        updateNotaInputsVisibility();
+        updateConferenceSummary();
+    }
+}
+
+// ==================== LÓGICA DE EXPORTAÇÃO (PDF, CSV, Share) ====================
 
 /**
  * @description Coleta todos os dados do relatório em um objeto estruturado.
+ * @returns {object} Um objeto contendo todos os dados para os relatórios.
  */
-function getConferenceReportData() {
+function getReportData() {
     const date = new Date();
-    let totalNota = 0;
-    let totalConferido = 0;
+    const produtos = Object.keys(conferenceData.produtos).sort();
     
-    const detalhes = [];
-    APP_DATA.PRODUTOS_CONFERENCIA.forEach(produto => {
-        const notaKg = parseFloat(notaQuantities[produto]) || 0;
-        const conferidoKg = parseFloat(conferenceEntries[produto]) || 0;
+    const detalhes = produtos.map(produto => {
+        const item = conferenceData.produtos[produto];
+        const diferenca = item.kgConferido - item.kgNota;
+        const diferencaAbs = Math.abs(diferenca).toFixed(2);
         
-        if (notaKg > 0 || conferidoKg > 0) {
-            const diferenca = conferidoKg - notaKg;
-            const status = diferenca === 0 ? 'OK' : (diferenca < 0 ? 'Falta' : 'Sobra');
-            
-            detalhes.push({
-                produto: produto,
-                notaKg: notaKg,
-                conferidoKg: conferidoKg,
-                diferenca: diferenca,
-                status: status
-            });
-            
-            totalNota += notaKg;
-            totalConferido += conferidoKg;
+        let status = 'OK';
+        if (diferenca > 5) {
+            status = `SOBRA ${diferencaAbs} KG`;
+        } else if (diferenca < -5) {
+            status = `FALTA ${diferencaAbs} KG`;
         }
+        
+        return {
+            produto: produto,
+            kgNota: item.kgNota,
+            kgConferido: item.kgConferido,
+            diferenca: diferenca,
+            status: status
+        };
     });
-    
-    const totalDiferenca = totalConferido - totalNota;
+
+    const totalKgNota = detalhes.reduce((sum, item) => sum + item.kgNota, 0);
+    const totalKgConferido = detalhes.reduce((sum, item) => sum + item.kgConferido, 0);
+    const totalDiferenca = totalKgConferido - totalKgNota;
     
     return {
-        conferente: selectConferente.value,
-        rede: selectRede.value,
-        loja: selectLoja.value,
+        entregador: conferenceData.entregador,
+        rede: conferenceData.rede,
+        loja: conferenceData.loja,
+        notaFiscal: conferenceData.notaFiscal,
         dataGeracao: date.toLocaleString('pt-BR'),
         dataArquivo: date.toISOString().slice(0, 10).replace(/-/g, ''),
         
-        detalhes: detalhes, 
+        detalhes: detalhes,
         
         resumo: {
-            totalNota: totalNota,
-            totalConferido: totalConferido,
+            totalKgNota: totalKgNota,
+            totalKgConferido: totalKgConferido,
             totalDiferenca: totalDiferenca
         }
     };
 }
 
+
 /**
- * @description Gera um objeto jsPDF profissional com AutoTable, incluindo a logomarca.
+ * @description Gera um objeto jsPDF profissional com AutoTable e Logomarca.
+ * @param {object} data - O objeto de dados da conferência.
+ * @returns {object} O objeto 'doc' do jsPDF.
  */
-function generateConferencePdf(data) {
+function generateProfessionalPdf(data) {
+    
+    // 1. Verifica se a biblioteca jsPDF principal está carregada
     if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
         alert("Erro: A biblioteca jsPDF não foi carregada.");
         return null;
     }
-    
+
+    // 2. Cria a instância do documento
     const doc = new window.jspdf.jsPDF(); 
 
-    // Verifica se o plugin autoTable foi carregado (CORREÇÃO DE ERRO)
+    // 3. Verifica se o plugin autoTable foi carregado
     if (typeof doc.autoTable === 'undefined') {
         alert("Erro: O plugin jsPDF-AutoTable não foi carregado. Verifique a ordem dos scripts no HTML.");
         return null;
     }
     
-    let startY = 20;
-
-    // === INSERÇÃO DA LOGOMARCA ===
-    const logoPath = './images/logo-qdelicia.png';
-    const logoWidth = 30; 
-    const logoHeight = 8; 
+    let startY = 20; 
     const margin = 14; 
 
-    try {
-        // Posição: 14mm da esquerda e 14mm do topo
-        doc.addImage(logoPath, 'PNG', margin, 14, logoWidth, logoHeight); 
-    } catch (e) {
-        console.warn("Não foi possível carregar a logomarca no PDF.", e);
+    // === INSERÇÃO DA LOGOMARCA (Base64 de alta qualidade) ===
+    const logoWidth = 30; 
+    const logoHeight = 8; 
+
+    if (LOGO_BASE64_IMAGE) {
+        try {
+            // Tenta determinar o tipo da imagem
+            const base64Type = LOGO_BASE64_IMAGE.includes('image/jpeg') ? 'JPEG' : 'PNG';
+            doc.addImage(LOGO_BASE64_IMAGE, base64Type, margin, 14, logoWidth, logoHeight); 
+        } catch (e) {
+            console.warn("Não foi possível carregar a logomarca Base64 no PDF. Verifique se a string está correta.", e);
+        }
+    } else {
+         console.warn("LOGO_BASE64_IMAGE não fornecida. O PDF será gerado sem a logomarca no cabeçalho.");
     }
     // === FIM DA INSERÇÃO DA LOGOMARCA ===
     
-    // O cabeçalho agora começa mais abaixo para acomodar a logo
+    // Ajusta o Y inicial para acomodar a logo
     startY = 32; 
-    
-    // === CABEÇALHO ===
+
+    // === CABEÇALHO GERAL ===
     doc.setFontSize(18);
     doc.setFont(undefined, 'bold');
-    doc.text("Relatório de Conferência", doc.internal.pageSize.getWidth() / 2, startY, { align: 'center' });
+    doc.text("RELATÓRIO DE CONFERÊNCIA DE LOJA", doc.internal.pageSize.getWidth() / 2, startY, { align: 'center' });
     startY += 8;
     
     doc.setFontSize(11);
     doc.setFont(undefined, 'normal');
-    doc.text(`Qdelícia Frutas - Gerado em: ${data.dataGeracao}`, doc.internal.pageSize.getWidth() / 2, startY, { align: 'center' });
+    doc.text(`QDELICIA FRUTAS - Conferência Logística`, doc.internal.pageSize.getWidth() / 2, startY, { align: 'center' });
     startY += 12;
 
     doc.setFontSize(10);
-    doc.text(`Conferente: ${data.conferente}`, 14, startY);
-    doc.text(`Rede/Loja: ${data.rede} / ${data.loja}`, 14, startY + 6);
-    startY += 16;
+    doc.text(`Entregador: ${data.entregador}`, margin, startY);
+    doc.text(`Rede/Loja: ${data.rede} / ${data.loja}`, doc.internal.pageSize.getWidth() / 2, startY);
+    doc.text(`Nota Fiscal: ${data.notaFiscal}`, doc.internal.pageSize.getWidth() - margin, startY, { align: 'right' });
+    startY += 5;
+    doc.text(`Gerado em: ${data.dataGeracao}`, margin, startY);
+    startY += 10;
+    
+    // === SEÇÃO 1: TABELA DE DETALHES (autoTable) ===
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text("1. DETALHES DA CONFERÊNCIA POR PRODUTO", margin, startY);
+    startY += 7;
 
-    // === TABELA DE DETALHES ===
     const tableHead = [['Produto', 'KG Nota', 'KG Conferido', 'Diferença (KG)', 'Status']];
-    const tableBody = data.detalhes.map(item => [
-        item.produto,
-        item.notaKg.toFixed(2),
-        item.conferidoKg.toFixed(2),
-        item.diferenca.toFixed(2),
-        item.status
-    ]);
+    const tableBody = data.detalhes.map(item => {
+        let statusColor = [0, 0, 0]; // Preto padrão
+        if (item.status.includes('SOBRA')) {
+            statusColor = [255, 152, 0]; // Laranja
+        } else if (item.status.includes('FALTA')) {
+            statusColor = [244, 67, 54]; // Vermelho
+        } else if (item.status.includes('OK')) {
+            statusColor = [37, 211, 102]; // Verde
+        }
 
-    // === LINHA DE TOTAL PARA A TABELA ===
+        return [
+            item.produto,
+            item.kgNota.toFixed(2),
+            item.kgConferido.toFixed(2),
+            { content: item.diferenca.toFixed(2), styles: { fontStyle: item.diferenca !== 0 ? 'bold' : 'normal' } },
+            { content: item.status, styles: { textColor: statusColor, fontStyle: 'bold' } }
+        ];
+    });
+    
+    // Linha de Total na Tabela
     tableBody.push([
-        { content: 'TOTAL', colSpan: 1, styles: { fontStyle: 'bold' } },
-        { content: data.resumo.totalNota.toFixed(2), styles: { fontStyle: 'bold' } },
-        { content: data.resumo.totalConferido.toFixed(2), styles: { fontStyle: 'bold' } },
+        { content: 'TOTAIS GERAIS', colSpan: 1, styles: { fontStyle: 'bold' } },
+        { content: data.resumo.totalKgNota.toFixed(2), styles: { fontStyle: 'bold' } },
+        { content: data.resumo.totalKgConferido.toFixed(2), styles: { fontStyle: 'bold' } },
         { content: data.resumo.totalDiferenca.toFixed(2), styles: { fontStyle: 'bold' } },
-        { content: data.resumo.totalDiferenca === 0 ? 'OK' : (data.resumo.totalDiferenca < 0 ? 'FALTA' : 'SOBRA'), styles: { fontStyle: 'bold' } }
+        { content: '', styles: { fontStyle: 'bold' } }
     ]);
 
     doc.autoTable({
@@ -498,48 +432,66 @@ function generateConferencePdf(data) {
         body: tableBody,
         startY: startY,
         theme: 'striped',
-        headStyles: { fillColor: [93, 63, 211], textColor: 255, fontStyle: 'bold' }, 
-        didParseCell: function (hookData) {
-            if (hookData.section === 'body') {
-                const cellValue = hookData.cell.raw;
-                if (hookData.column.dataKey === 3) { 
-                    const numValue = parseFloat(cellValue);
-                    if (numValue < 0) hookData.cell.styles.textColor = [211, 63, 63]; 
-                    if (numValue > 0) hookData.cell.styles.textColor = [255, 152, 0]; 
-                }
-                if (hookData.column.dataKey === 4) { 
-                    if (cellValue === 'Falta') hookData.cell.styles.textColor = [211, 63, 63];
-                    if (cellValue === 'Sobra') hookData.cell.styles.textColor = [255, 152, 0];
-                    if (cellValue === 'OK') hookData.cell.styles.textColor = [37, 211, 102]; 
-                }
-            }
+        headStyles: { fillColor: [41, 128, 185], textColor: 255, fontStyle: 'bold' },
+        columnStyles: {
+             0: { cellWidth: 30 }, // Produto
+             1: { cellWidth: 20, halign: 'right' }, // KG Nota
+             2: { cellWidth: 30, halign: 'right' }, // KG Conferido
+             3: { cellWidth: 30, halign: 'right' }, // Diferença
+             4: { cellWidth: 50 } // Status
+        },
+        didDrawPage: (hookData) => {
+            startY = hookData.cursor.y; // Atualiza a posição Y após a tabela
         }
     });
+
+    startY += 10; 
+
+    // === SEÇÃO 2: RESUMO FINAL ===
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text("2. RESUMO DA ENTREGA", margin, startY);
+    startY += 7;
+    
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    doc.text(`Diferença Total: ${data.resumo.totalDiferenca.toFixed(2)} KG`, margin + 2, startY);
     
     return doc;
 }
 
+
 /**
  * @description Gera o texto para um arquivo CSV.
+ * @param {object} data - O objeto de dados da conferência.
+ * @returns {string} O texto formatado em CSV.
  */
-function generateConferenceCsv(data) {
+function generateCsvText(data) {
     const separator = ';';
     const eol = '\r\n';
 
-    let csv = `RELATORIO DE CONFERENCIA - QDELICIA FRUTAS${eol}`;
-    csv += `Conferente${separator}${data.conferente}${eol}`;
-    csv += `Rede/Loja${separator}${data.rede} / ${data.loja}${eol}`;
+    let csv = `RELATORIO DE CONFERENCIA DE LOJA${eol}`;
+    csv += `Entregador${separator}${data.entregador}${eol}`;
+    csv += `Rede${separator}${data.rede}${eol}`;
+    csv += `Loja${separator}${data.loja}${eol}`;
+    csv += `Nota Fiscal${separator}${data.notaFiscal}${eol}`;
     csv += `Data Geracao${separator}${data.dataGeracao}${eol}`;
-    csv += `${eol}`;
+    csv += `${eol}`; 
 
+    // Resumo
+    csv += `RESUMO GERAL${separator}Valor${eol}`;
+    csv += `Total KG (Nota)${separator}${data.resumo.totalKgNota.toFixed(2)}${eol}`;
+    csv += `Total KG (Conferido)${separator}${data.resumo.totalKgConferido.toFixed(2)}${eol}`;
+    csv += `Diferenca Total (KG)${separator}${data.resumo.totalDiferenca.toFixed(2)}${eol}`;
+    csv += `${eol}`; 
+
+    // Detalhes (Tabela)
+    csv += `DETALHES DA CONFERENCIA${eol}`;
     csv += `Produto${separator}KG Nota${separator}KG Conferido${separator}Diferenca (KG)${separator}Status${eol}`;
     
     data.detalhes.forEach(item => {
-        csv += `${item.produto}${separator}${item.notaKg.toFixed(2)}${separator}${item.conferidoKg.toFixed(2)}${separator}${item.diferenca.toFixed(2)}${separator}${item.status}${eol}`;
+        csv += `${item.produto}${separator}${item.kgNota.toFixed(2)}${separator}${item.kgConferido.toFixed(2)}${separator}${item.diferenca.toFixed(2)}${separator}${item.status}${eol}`;
     });
-    
-    csv += `${eol}`;
-    csv += `TOTAL${separator}${data.resumo.totalNota.toFixed(2)}${separator}${data.resumo.totalConferido.toFixed(2)}${separator}${data.resumo.totalDiferenca.toFixed(2)}${eol}`;
     
     return csv;
 }
@@ -548,13 +500,13 @@ function generateConferenceCsv(data) {
  * @description Compartilha o relatório em PDF (via Web Share API).
  */
 async function sharePdfReport() {
-    const data = getConferenceReportData();
-    if (data.detalhes.length === 0) {
-        alert("Não há dados de conferência para compartilhar.");
+    if (Object.keys(conferenceData.produtos).length === 0) {
+        alert("Não há produtos conferidos para compartilhar.");
         return;
     }
 
-    const doc = generateConferencePdf(data);
+    const data = getReportData();
+    const doc = generateProfessionalPdf(data);
     if (!doc) return; 
 
     if (!navigator.share || !navigator.canShare) {
@@ -562,14 +514,15 @@ async function sharePdfReport() {
         return;
     }
 
-    const filename = `Conferencia_${data.rede.replace(/ /g, '_')}_${data.dataArquivo}.pdf`;
+    const filename = `Relatorio_Conferencia_${data.loja}_${data.dataArquivo}.pdf`;
+    
     const pdfBlob = doc.output('blob');
     const file = new File([pdfBlob], filename, { type: 'application/pdf' });
     
     const shareData = {
         files: [file],
-        title: `Relatório Conferência - ${data.conferente}`,
-        text: `Segue o relatório de conferência (PDF).`
+        title: `Relatório Conferência ${data.rede} - ${data.loja}`,
+        text: `Segue o relatório de conferência (PDF) da nota ${data.notaFiscal}.`
     };
 
     if (navigator.canShare(shareData)) {
@@ -590,9 +543,8 @@ async function sharePdfReport() {
  * @description Compartilha o relatório em CSV (via Web Share API).
  */
 async function shareCsvReport() {
-    const data = getConferenceReportData();
-     if (data.detalhes.length === 0) {
-        alert("Não há dados de conferência para compartilhar.");
+    if (Object.keys(conferenceData.produtos).length === 0) {
+        alert("Não há produtos conferidos para compartilhar.");
         return;
     }
 
@@ -601,15 +553,18 @@ async function shareCsvReport() {
         return;
     }
 
-    const csvText = generateConferenceCsv(data);
-    const filename = `Conferencia_${data.rede.replace(/ /g, '_')}_${data.dataArquivo}.csv`;
+    const data = getReportData();
+    const csvText = generateCsvText(data);
+    const filename = `Relatorio_Conferencia_${data.loja}_${data.dataArquivo}.csv`;
+
     const csvBlob = new Blob([csvText], { type: 'text/csv;charset=utf-8;' });
+    
     const file = new File([csvBlob], filename, { type: 'text/csv' });
     
     const shareData = {
         files: [file],
-        title: `Relatório Conferência - ${data.conferente}`,
-        text: `Segue o relatório de conferência (CSV).`
+        title: `Relatório Conferência ${data.rede} - ${data.loja}`,
+        text: `Segue o relatório de conferência (CSV) da nota ${data.notaFiscal}.`
     };
 
     if (navigator.canShare(shareData)) {
@@ -626,90 +581,94 @@ async function shareCsvReport() {
     }
 }
 
-
 /**
  * @description Inicia o download do relatório em formato PDF profissional.
  */
 function downloadPdfReport() {
-    const data = getConferenceReportData();
-     if (data.detalhes.length === 0) {
-        alert("Não há dados de conferência para gerar o relatório.");
+    if (Object.keys(conferenceData.produtos).length === 0) {
+        alert("Não há produtos conferidos para gerar o relatório.");
         return;
     }
 
-    const doc = generateConferencePdf(data);
+    const data = getReportData();
+    const doc = generateProfessionalPdf(data);
     if (!doc) return; 
 
-    const filename = `Conferencia_${data.rede.replace(/ /g, '_')}_${data.dataArquivo}.pdf`;
+    const filename = `Relatorio_Conferencia_${data.loja}_${data.dataArquivo}.pdf`;
+    
     doc.save(filename);
 }
 
-/**
- * @description Reinicia todo o estado da conferência e LIMPA o Local Storage.
- */
-function resetConference() {
-    notaQuantities = {};
-    conferenceEntries = {};
-    
-    localStorage.removeItem(localStorageKeyConference); 
-    localStorage.removeItem(localStorageKeyConferenceState); 
-    
-    document.querySelectorAll('#nota-input-section input, #user-info-section select').forEach(el => el.disabled = false);
-    
-    loadAndPopulateDropdowns(); 
 
-    startConferenceBtn.style.display = 'block';
-    startConferenceBtn.textContent = 'Preencha todos os campos';
-    conferenceInputSection.style.display = 'none';
-    conferenceSummarySection.style.display = 'none';
+// ==================== LÓGICA DE EVENTOS E VISIBILIDADE ====================
+
+/**
+ * @description Preenche o dropdown de lojas com base na rede selecionada.
+ */
+function handleRedeChange() {
+    const redeSelecionada = selectRede.value;
+    const lojas = APP_DATA.REDES_LOJAS[redeSelecionada] || [];
+    populateSelect(selectLoja, lojas, "Selecione a Loja");
     
-    if (conferenceSummaryTableBody) conferenceSummaryTableBody.innerHTML = '';
+    // Limpa o valor da loja no estado
+    conferenceData.loja = "";
+    if (selectLoja) selectLoja.value = ""; 
     
-    populateNotaInputs(); 
-    checkStartConferenceButton();
-    updateSummaryDisplay(); 
+    saveConferenceData();
+    updateNotaInputsVisibility();
 }
 
-// ==================== INICIALIZAÇÃO E LISTENERS ====================
+/**
+ * @description Controla a visibilidade da seção de inputs da nota.
+ */
+function updateNotaInputsVisibility() {
+    const isReady = selectEntregador.value && selectRede.value && selectLoja.value;
+    if (notaInputsSection) {
+        notaInputsSection.style.display = isReady ? 'block' : 'none';
+    }
+    // Salva o estado atual
+    saveConferenceData();
+}
 
-// Listeners de seleção de usuário (salvam no localStorage)
-if (selectConferente) selectConferente.addEventListener('change', saveSelection);
-if (selectRede) selectRede.addEventListener('change', (e) => {
-    populateLoja(e.target.value);
-    saveSelection();
+// ==================== LISTENERS ====================
+
+// Funções de preenchimento e visibilidade
+if (selectRede) selectRede.addEventListener('change', handleRedeChange);
+if (selectLoja) selectLoja.addEventListener('change', updateNotaInputsVisibility);
+if (selectEntregador) selectEntregador.addEventListener('change', updateNotaInputsVisibility);
+
+// Listeners de input da nota (atualiza o estado em tempo real)
+if (inputNotaFiscal) inputNotaFiscal.addEventListener('input', saveConferenceData);
+
+// Listeners do form de adição de conferência
+if (addConferenceBtn) addConferenceBtn.addEventListener('click', addOrUpdateConference);
+
+// Habilita/Desabilita o botão de adicionar
+if (inputKgNota) inputKgNota.addEventListener('input', () => {
+    addConferenceBtn.disabled = !selectProductConference.value || parseFloat(inputKgNota.value) <= 0 || parseFloat(inputKgConference.value) < 0;
 });
-if (selectLoja) selectLoja.addEventListener('change', saveSelection);
-
-// Listeners dos botões de ação principal
-if (startConferenceBtn) startConferenceBtn.addEventListener('click', startConference);
-if (addConferenceBtn) addConferenceBtn.addEventListener('click', addConferenceEntry);
-
-// Listeners de habilitação do botão 'Adicionar'
 if (inputKgConference) inputKgConference.addEventListener('input', () => {
-    addConferenceBtn.disabled = !selectProductConference.value || parseFloat(inputKgConference.value) <= 0;
+    addConferenceBtn.disabled = !selectProductConference.value || parseFloat(inputKgNota.value) <= 0 || parseFloat(inputKgConference.value) < 0;
 });
 if (selectProductConference) selectProductConference.addEventListener('change', () => {
-    addConferenceBtn.disabled = !selectProductConference.value || parseFloat(inputKgConference.value) <= 0;
+    addConferenceBtn.disabled = !selectProductConference.value || parseFloat(inputKgNota.value) <= 0 || parseFloat(inputKgConference.value) < 0;
 });
 
-// Botões de Relatório e Reset
+
+// ================== EVENT LISTENERS DE RELATÓRIO ==================
 if (downloadPdfBtn) downloadPdfBtn.addEventListener('click', downloadPdfReport);
 if (sharePdfBtn) sharePdfBtn.addEventListener('click', sharePdfReport);
 if (shareCsvBtn) shareCsvBtn.addEventListener('click', shareCsvReport);
 if (resetConferenceBtn) resetConferenceBtn.addEventListener('click', resetConference);
+// ======================================================================
+
 
 // Inicia o processo
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Carrega/Preenche os dados do usuário/loja (seleção)
+    // Carrega/Preenche os dados do usuário/loja
     loadAndPopulateDropdowns();
     
-    // 2. Tenta carregar o estado da conferência 
-    loadConferenceState();
-    
-    // 3. Injeta os campos de input da nota (populando com os dados carregados ou vazios)
-    populateNotaInputs();
-    
-    // 4. Configura o menu hamburger 
+    // Configura o menu hamburger (Copia as funções do script.js)
     const menuToggle = document.querySelector('.menu-toggle');
     const sideMenu = document.querySelector('.side-menu');
     const menuOverlay = document.querySelector('.menu-overlay');
@@ -723,6 +682,31 @@ document.addEventListener('DOMContentLoaded', () => {
         menuOverlay.addEventListener('click', () => {
             sideMenu.classList.remove('active');
             menuOverlay.classList.remove('active');
+        });
+        
+        // Garante que o menu feche ao clicar em um link
+        sideMenu.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                sideMenu.classList.remove('active');
+                menuOverlay.classList.remove('active');
+            });
+        });
+    }
+    
+    // Configura o botão voltar ao topo
+    const backToTop = document.querySelector('.back-to-top');
+
+    if (backToTop) {
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                backToTop.classList.add('show');
+            } else {
+                backToTop.classList.remove('show');
+            }
+        });
+
+        backToTop.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         });
     }
 });
