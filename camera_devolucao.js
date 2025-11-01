@@ -1,4 +1,4 @@
-// ==================== ESTRUTURA de DADOS PARA DROPDOWNS (DEVOLUÇÃO) ====================
+// ==================== ESTRUTURA DE DADOS PARA DROPDOWNS (DEVOLUÇÃO) ====================
 const APP_DATA = {
     // Entregadores (lista independente)
     ENTREGADORES: [
@@ -115,7 +115,7 @@ const itemListElement = document.getElementById('item-list');
 let currentStream = null;
 let usingFrontCamera = false;
 let photos = [];
-let items = []; // NOVA: Armazena a lista de itens (produto, motivo, qtd)
+let items = []; // Armazena a lista de itens (produto, motivo, qtd)
 const localStorageKey = 'qdelicia_logistica_last_selection'; 
 
 // Carregar a imagem da logomarca
@@ -135,7 +135,7 @@ function saveSelection() {
         entregador: selectEntregador ? selectEntregador.value : '',
         rede: selectRede ? selectRede.value : '',
         loja: selectLoja ? selectLoja.value : '',
-        observacoes: inputObservacoes ? inputObservacoes.value : '' // MODIFICADO
+        observacoes: inputObservacoes ? inputObservacoes.value : ''
     };
     localStorage.setItem(localStorageKey, JSON.stringify(selection));
     checkCameraAccess();
@@ -185,7 +185,7 @@ function loadAndPopulateDropdowns() {
 
     // Popula campos específicos de Devolução
     populateSelect(selectMotivo, APP_DATA.MOTIVOS_DEVOLUCAO, "Selecione o Motivo");
-    populateSelect(selectProduto, APP_DATA.TIPOS_PRODUO, "Selecione o Produto");
+    populateSelect(selectProduto, APP_DATA.TIPOS_PRODUTO, "Selecione o Produto");
     
 
     const savedSelection = JSON.parse(localStorage.getItem(localStorageKey));
@@ -199,14 +199,13 @@ function loadAndPopulateDropdowns() {
             if (selectLoja && savedSelection.loja) selectLoja.value = savedSelection.loja;
         }
         
-        // Carrega dados salvos específicos de Devolução
-        if (inputObservacoes && savedSelection.observacoes) inputObservacoes.value = savedSelection.observacoes; // MODIFICADO
+        if (inputObservacoes && savedSelection.observacoes) inputObservacoes.value = savedSelection.observacoes; 
     }
     
     checkCameraAccess();
 }
 
-// NOVA FUNÇÃO: Adiciona item na lista
+// FUNÇÃO: Adiciona item na lista
 function handleAddItem() {
     const produto = selectProduto.value;
     const motivo = selectMotivo.value;
@@ -228,7 +227,7 @@ function handleAddItem() {
     inputQuantidade.value = "";
 }
 
-// NOVA FUNÇÃO: Atualiza a lista de itens na UI
+// FUNÇÃO: Atualiza a lista de itens na UI (Esta função mostra os itens na tela)
 function updateItemListUI() {
     if (!itemListElement) return;
 
@@ -246,6 +245,7 @@ function updateItemListUI() {
             </button>
         `;
         
+        // Adiciona o listener para o botão de deletar item da lista
         li.querySelector('.delete-item-btn').addEventListener('click', () => {
             items.splice(index, 1); // Remove o item do array
             updateItemListUI(); // Atualiza a UI
@@ -263,7 +263,7 @@ function checkCameraAccess() {
                             selectRede && selectRede.value && 
                             selectLoja && selectLoja.value;
     
-    // MODIFICADO: Validação agora checa se a lista de itens tem pelo menos 1 item
+    // Validação agora checa se a lista de itens tem pelo menos 1 item
     const itemsReady = items.length > 0;
     
     isReady = baseFieldsReady && itemsReady;
@@ -297,7 +297,7 @@ if (selectRede) {
 }
 if (selectLoja) selectLoja.addEventListener('change', saveSelection);
 
-// Listeners específicos de Devolução MODIFICADOS
+// Listeners específicos de Devolução
 if (inputObservacoes) inputObservacoes.addEventListener('input', saveSelection); 
 if (addItemBtn) addItemBtn.addEventListener('click', handleAddItem);
 
@@ -320,7 +320,7 @@ function drawWatermark(canvas, ctx) {
     lines.push(`Entregador: ${entregador}`);
     lines.push(`Rede: ${rede} || Loja: ${loja}`);
 
-    // MODIFICADO: Campos de Devolução vêm da lista 'items'
+    // Campos de Devolução vêm da lista 'items'
     if (items.length > 0) {
         lines.push(`--- ITENS DEVOLUÇÃO ---`);
         items.forEach((item, index) => {
@@ -452,7 +452,7 @@ function updateDateTimeWatermark() {
         watermarkContent += `<br>Entregador: ${entregador}`;
         watermarkContent += `<br>Rede: ${rede} || Loja: ${loja}`;
 
-        // MODIFICADO: Campos de Devolução vêm da lista 'items'
+        // Campos de Devolução vêm da lista 'items'
         if (items.length > 0) {
             watermarkContent += `<br>--- ITENS DEVOLUÇÃO ---`;
             items.forEach((item, index) => {
@@ -492,6 +492,7 @@ function takePhoto() {
     updateGallery();
 }
 
+// FUNÇÃO: Atualiza a galeria (Esta função mostra as fotos com o botão de lixeira)
 function updateGallery() {
     if (!photoList) return; 
 
@@ -517,12 +518,13 @@ function updateGallery() {
         downloadBtn.classList.add('icon-btn', 'download-icon');
         downloadBtn.innerHTML = '<i class="fas fa-download"></i>';
         
+        // Botão de deletar a foto
         const deleteBtn = document.createElement('button');
         deleteBtn.classList.add('icon-btn', 'delete-icon');
         deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
         deleteBtn.addEventListener('click', () => {
-            photos.splice(index, 1);
-            updateGallery(); 
+            photos.splice(index, 1); // Remove a foto do array
+            updateGallery(); // Atualiza a galeria
         });
 
         const controlsContainer = document.createElement('div');
@@ -535,8 +537,8 @@ function updateGallery() {
     });
 }
 
-// NOVA FUNÇÃO: Lógica de Geração de PDF (Stub)
-function generatePDFReport(action) {
+// ==================== LÓGICA DE GERAÇÃO DE PDF (CORRIGIDA) ====================
+async function generatePDFReport(action) {
     if (photos.length === 0) {
         alert("Tire pelo menos uma foto para gerar o relatório.");
         return;
@@ -547,12 +549,13 @@ function generatePDFReport(action) {
     }
 
     // 1. Verifica se a biblioteca jsPDF está disponível
-    if (typeof jsPDF === 'undefined' || typeof html2canvas === 'undefined') {
-        alert("ERRO: As bibliotecas jsPDF e html2canvas são necessárias para gerar o PDF.\n\nPor favor, peça ao desenvolvedor para adicioná-las ao arquivo HTML.");
-        
-        console.warn("jsPDF ou html2canvas não encontrados.");
+    if (typeof jspdf === 'undefined' || typeof html2canvas === 'undefined') {
+        alert("ERRO: As bibliotecas jsPDF e html2canvas não foram carregadas.\n\nVerifique a conexão com a internet ou contate o desenvolvedor.");
+        console.error("jsPDF ou html2canvas não encontrados. Verifique os <script> tags no HTML.");
         return;
     }
+    
+    const { jsPDF } = jspdf; // Pega o construtor do objeto global jspdf
 
     // 2. Coletar todos os dados
     const entregador = selectEntregador.value;
@@ -565,10 +568,15 @@ function generatePDFReport(action) {
 
     // 3. Criar um contêiner HTML temporário para o conteúdo do PDF
     const reportElement = document.createElement('div');
+    reportElement.style.position = 'absolute';
+    reportElement.style.left = '-9999px'; // Esconde o elemento fora da tela
     reportElement.style.width = '210mm'; // Tamanho A4
     reportElement.style.padding = '10mm';
+    reportElement.style.boxSizing = 'border-box';
     reportElement.style.fontFamily = 'Arial, sans-serif';
     reportElement.style.fontSize = '12px';
+    reportElement.style.background = '#ffffff';
+    reportElement.style.color = '#000000';
     
     let reportContent = `
         <img src="${logoImage.src}" style="width: 150px; margin-bottom: 10px;" alt="Logo">
@@ -588,11 +596,12 @@ function generatePDFReport(action) {
     reportContent += `
         </ul>
         <h2 style="font-size: 16px; margin-top: 20px; border-bottom: 1px solid #eee; padding-bottom: 3px;">Observações</h2>
-        <p style="white-space: pre-wrap;">${observacoes}</p>
+        <p style="white-space: pre-wrap; word-wrap: break-word;">${observacoes}</p>
         
         <h2 style="font-size: 16px; margin-top: 20px; border-bottom: 1px solid #eee; padding-bottom: 3px;">Fotos</h2>
     `;
     
+    // Adiciona todas as fotos ao conteúdo
     photos.forEach((photoUrl, index) => {
         reportContent += `
             <div style="margin-top: 15px; page-break-inside: avoid;">
@@ -606,31 +615,60 @@ function generatePDFReport(action) {
     document.body.appendChild(reportElement); // Adiciona ao DOM para o html2canvas ler
 
     // 4. Usar html2canvas para renderizar o HTML e jsPDF para criar o PDF
-    html2canvas(reportElement, { scale: 2 }).then(canvas => {
+    try {
+        const canvas = await html2canvas(reportElement, {
+            scale: 2, // Aumenta a resolução
+            useCORS: true // Tenta carregar imagens de outras origens (se houver)
+        });
+        
         document.body.removeChild(reportElement); // Remove o elemento temporário
         
         const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF.jsPDF('p', 'mm', 'a4');
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        
         const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        const pdfHeight = pdf.internal.pageSize.getHeight();
         
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
         
-        const fileName = `relatorio_devolucao_${rede}_${loja}.pdf`;
+        // Calcula a proporção para ajustar a largura do canvas à largura do PDF
+        const ratio = pdfWidth / canvasWidth;
+        const imgHeight = canvasHeight * ratio; // Altura total da imagem no PDF
+        
+        let heightLeft = imgHeight;
+        let position = 0;
+        
+        // Adiciona a primeira página
+        pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+        heightLeft -= pdfHeight;
+
+        // Adiciona páginas subsequentes se o conteúdo for maior
+        while (heightLeft > 0) {
+            position = heightLeft - imgHeight; // Posição Y negativa no canvas
+            pdf.addPage();
+            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+            heightLeft -= pdfHeight;
+        }
+        
+        const fileName = `relatorio_devolucao_${rede}_${loja}_${date.split(' ')[0].replace(/\//g, '-')}.pdf`;
 
         if (action === 'download') {
             pdf.save(fileName);
         } else if (action === 'share') {
-            alert("A função de 'Compartilhar' gerará o PDF. Por favor, use a função de compartilhamento do seu visualizador de PDF após o download.");
-            // O compartilhamento direto de blobs de PDF é complexo e não universal
-            // A melhor abordagem é o download
+            // A API de compartilhamento Web (navigator.share) é complexa para blobs de PDF.
+            // A melhor abordagem é salvar e instruir o usuário a compartilhar.
+            alert("O PDF será baixado. Por favor, use a função de compartilhamento do seu visualizador de PDF.");
             pdf.save(fileName);
         }
-    }).catch(err => {
+
+    } catch (err) {
         console.error("Erro ao gerar PDF:", err);
         alert("Ocorreu um erro ao gerar o relatório PDF.");
-        document.body.removeChild(reportElement);
-    });
+        if (document.body.contains(reportElement)) {
+            document.body.removeChild(reportElement);
+        }
+    }
 }
 
 
@@ -654,7 +692,7 @@ if (switchBtn) {
     });
 }
 
-// MODIFICADO: Listeners para os botões de PDF
+// Listeners para os botões de PDF
 if (downloadAllBtn) downloadAllBtn.addEventListener('click', () => generatePDFReport('download'));
 if (shareAllBtn) shareAllBtn.addEventListener('click', () => generatePDFReport('share'));
 
