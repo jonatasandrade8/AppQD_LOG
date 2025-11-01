@@ -91,7 +91,7 @@ const backToGalleryBtn = document.getElementById('back-to-gallery-btn');
 const video = document.getElementById('video');
 const shutterBtn = document.getElementById('shutter-btn');
 const switchBtn = document.getElementById('switch-btn');
-const dateTimeElement = document.getElementById('date-time');
+// const dateTimeElement = document.getElementById('date-time'); <--- REMOVIDO: Elemento de Marca D'água
 const photoList = document.getElementById('photo-list');
 const downloadAllBtn = document.getElementById('download-all');
 const shareAllBtn = document.getElementById('share-all');
@@ -118,7 +118,7 @@ let photos = [];
 let items = []; // Armazena a lista de itens (produto, motivo, qtd)
 const localStorageKey = 'qdelicia_logistica_last_selection'; 
 
-// Carregar a imagem da logomarca
+// Carregar a imagem da logomarca (mantida para uso apenas no PDF)
 const logoImage = new Image();
 logoImage.src = './images/logo-qdelicia.png'; 
 logoImage.onerror = () => console.error("Erro ao carregar a imagem da logomarca. Verifique o caminho.");
@@ -295,97 +295,12 @@ if (inputObservacoes) inputObservacoes.addEventListener('input', saveSelection);
 if (addItemBtn) addItemBtn.addEventListener('click', handleAddItem);
 
 
-// --- LÓGICA DA CÂMERA (Marca d'água) ---
+// --- LÓGICA DA CÂMERA (SEM MARCA D'ÁGUA) ---
 
 /**
- * MODIFICADO: Esta função não é mais chamada em takePhoto()
- * e serve apenas para desenhar a marca d'água na pré-visualização.
+ * REMOVIDO: A função drawWatermark foi completamente removida.
  */
-function drawWatermark(canvas, ctx) {
-    const entregador = selectEntregador ? selectEntregador.value || 'N/A' : 'N/A';
-    const rede = selectRede ? selectRede.value || 'N/A' : 'N/A';
-    const loja = selectLoja ? selectLoja.value || 'N/A' : 'N/A';
-
-    const date = new Date();
-    const dateTimeText = date.toLocaleDateString('pt-BR', {
-        day: '2-digit', month: '2-digit', year: 'numeric',
-        hour: '2-digit', minute: '2-digit', second: '2-digit'
-    });
-    
-    const lines = [];
-    lines.push(`${dateTimeText}`);
-    lines.push(`Entregador: ${entregador}`);
-    lines.push(`Rede: ${rede} || Loja: ${loja}`);
-
-    if (items.length > 0) {
-        lines.push(`--- ITENS DEVOLUÇÃO ---`);
-        items.forEach((item, index) => {
-            lines.push(`Item ${index + 1}: ${item.produto} (${item.motivo}) - ${item.quantidade} KG`);
-        });
-    } else {
-        lines.push("Nenhum item de devolução adicionado");
-    }
-    
-    
-    // Configurações de Posição
-    const baseFontSize = canvas.height / 50; 
-    const lineHeight = baseFontSize * 1.3;
-    const margin = canvas.width / 50;
-    const padding = baseFontSize * 0.5;
-
-    ctx.font = `600 ${baseFontSize}px Arial, sans-serif`; 
-    ctx.textAlign = 'right';
-
-    let maxWidth = 0;
-    lines.forEach(line => {
-        const width = ctx.measureText(line).width;
-        if (width > maxWidth) maxWidth = width;
-    });
-
-    const rectWidth = maxWidth + 2 * padding;
-    const rectHeight = (lines.length * lineHeight) + padding;
-    
-    const xText = canvas.width - margin; 
-    const yBottomBaseline = canvas.height - margin; 
-    const xRect = xText - rectWidth;
-    const yRect = yBottomBaseline - rectHeight;
-
-    // Fundo do texto
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'; 
-    ctx.fillRect(xRect, yRect, rectWidth, rectHeight);
-
-
-    // Desenha o texto
-    ctx.fillStyle = 'rgba(255, 255, 255, 1)'; 
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.9)'; 
-    ctx.lineWidth = 2; 
-
-    let yText = yBottomBaseline - padding; 
-
-    lines.reverse().forEach(line => {
-        ctx.strokeText(line, xText - padding, yText);
-        ctx.fillText(line, xText - padding, yText);
-        yText -= lineHeight; 
-    });
-
-
-    // Logomarca (Canto Superior Esquerdo)
-    const logoHeight = canvas.height / 8; 
-    const logoWidth = (logoImage.width / logoImage.height) * logoHeight;
-    const xLogo = margin;
-    const yLogo = margin;
-
-    const logoBgPadding = baseFontSize * 0.5;
-    const logoBgWidth = logoWidth + 2 * logoBgPadding;
-    const logoBgHeight = logoHeight + 2 * logoBgPadding;
-    
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'; 
-    ctx.fillRect(xLogo - logoBgPadding, yLogo - logoBgPadding, logoBgWidth, logoBgHeight);
-
-    if (logoImage.complete && logoImage.naturalHeight !== 0) {
-        ctx.drawImage(logoImage, xLogo, yLogo, logoWidth, logoHeight);
-    }
-}
+// function drawWatermark(canvas, ctx) { ... }
 
 
 function startCamera(facingMode = 'environment') {
@@ -407,7 +322,7 @@ function startCamera(facingMode = 'environment') {
             checkCameraAccess(); 
             if (fullscreenCameraContainer) {
                 fullscreenCameraContainer.style.display = 'flex';
-                updateDateTimeWatermark(); 
+                // updateDateTimeWatermark(); <--- REMOVIDO: Nenhuma marca d'água na pré-visualização
             }
         })
         .catch(err => {
@@ -432,42 +347,15 @@ function stopCamera() {
     checkCameraAccess();
 }
 
-function updateDateTimeWatermark() {
-    if (dateTimeElement) {
-        const date = new Date();
-        const dateTimeText = date.toLocaleDateString('pt-BR', {
-            day: '2-digit', month: '2-digit', year: 'numeric',
-            hour: '2-digit', minute: '2-digit', second: '2-digit'
-        });
-        
-        const entregador = selectEntregador ? selectEntregador.value || 'N/A' : 'N/A';
-        const rede = selectRede ? selectRede.value || 'N/A' : 'N/A';
-        const loja = selectLoja ? selectLoja.value || 'N/A' : 'N/A';
-
-        let watermarkContent = `${dateTimeText}`;
-        watermarkContent += `<br>Entregador: ${entregador}`;
-        watermarkContent += `<br>Rede: ${rede} || Loja: ${loja}`;
-
-        if (items.length > 0) {
-            watermarkContent += `<br>--- ITENS DEVOLUÇÃO ---`;
-            items.forEach((item, index) => {
-                watermarkContent += `<br>Item ${index + 1}: ${item.produto} (${item.motivo}) - ${item.quantidade} KG`;
-            });
-        } else {
-            watermarkContent += `<br>Nenhum item adicionado`;
-        }
-        
-        
-        dateTimeElement.innerHTML = watermarkContent;
-    }
-    if (currentStream) { 
-        requestAnimationFrame(updateDateTimeWatermark); 
-    }
-}
+/**
+ * REMOVIDO: A função updateDateTimeWatermark foi removida,
+ * pois não haverá marca d'água de data/hora na pré-visualização.
+ */
+// function updateDateTimeWatermark() { ... }
 
 
 /**
- * MODIFICADO: Removeu a chamada a drawWatermark(). As fotos agora são puras.
+ * CONFIRMADO: As fotos agora são capturadas limpas, sem marca d'água.
  */
 function takePhoto() {
     if (!currentStream) {
@@ -482,7 +370,7 @@ function takePhoto() {
     const ctx = canvas.getContext('2d');
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     
-    // drawWatermark(canvas, ctx); <--- REMOVIDO PARA TIRAR A MARCA D'ÁGUA DA FOTO
+    // drawWatermark(canvas, ctx); <--- Não está aqui. Foto limpa.
 
     const photoDataUrl = canvas.toDataURL('image/jpeg', 0.9);
     photos.push(photoDataUrl);
@@ -533,7 +421,7 @@ function updateGallery() {
     });
 }
 
-// ==================== LÓGICA DE GERAÇÃO DE PDF (CORRIGIDA E OTIMIZADA) ====================
+// ==================== LÓGICA DE GERAÇÃO DE PDF (OTIMIZADA) ====================
 async function generatePDFReport(action) {
     if (photos.length === 0) {
         alert("Tire pelo menos uma foto para gerar o relatório.");
@@ -564,11 +452,12 @@ async function generatePDFReport(action) {
     const imgWidth = (pdfWidth - (margin * 2) - ((cols - 1) * imgPadding)) / cols;
     const imgHeight = (pdfHeight - (margin * 2) - ((rows - 1) * imgPadding)) / rows;
     
-    let currentPhoto = 0;
     
     // --- PARTE 1: ADICIONAR FOTOS (2x3 por página) ---
+    // A primeira página é adicionada automaticamente
+    let currentPhoto = 0;
+    
     for (let i = 0; i < photos.length; i++) {
-        const pageIndex = Math.floor(i / (cols * rows));
         const photoIndexOnPage = i % (cols * rows);
         
         if (photoIndexOnPage === 0 && i !== 0) {
@@ -590,12 +479,10 @@ async function generatePDFReport(action) {
         currentPhoto++;
     }
 
-    // --- PARTE 2: ADICIONAR RELATÓRIO DE INFORMAÇÕES ---
+    // --- PARTE 2: ADICIONAR RELATÓRIO DE INFORMAÇÕES (NOVA PÁGINA) ---
     
-    // Adiciona uma nova página para o relatório, se já houver fotos
-    if (photos.length > 0) {
-        pdf.addPage();
-    }
+    // Adiciona uma nova página para o relatório, garantindo que comece sempre em uma página nova após as fotos
+    pdf.addPage();
     
     const entregador = selectEntregador.value;
     const rede = selectRede.value;
@@ -606,18 +493,16 @@ async function generatePDFReport(action) {
 
     // Cabeçalho e Logomarca
     
-    // Adiciona a logomarca (a logomarca precisa ser carregada como dataURL ou img tag para ser usada)
     const logoDataUrl = logoImage.complete ? logoImage.src : null;
     if (logoDataUrl) {
-        // Assume que a logomarca é pequena e usa a imagem original para manter a qualidade
-        pdf.addImage(logoDataUrl, 'PNG', margin, yPos, 40, 15); // Ex: 40mm de largura por 15mm de altura
-        yPos += 20; // Espaço após a logo
+        pdf.addImage(logoDataUrl, 'PNG', margin, yPos, 40, 15); 
+        yPos += 20; 
     }
     
     // Título
     pdf.setFontSize(18);
     pdf.text('Relatório de Devolução', margin, yPos);
-    pdf.line(margin, yPos + 2, pdfWidth - margin, yPos + 2); // Linha separadora
+    pdf.line(margin, yPos + 2, pdfWidth - margin, yPos + 2); 
     yPos += 10; 
 
     // Dados Gerais
@@ -638,12 +523,11 @@ async function generatePDFReport(action) {
     pdf.setFontSize(11);
     items.forEach((item, index) => {
         const text = `• Item ${index + 1}: ${item.produto} (${item.motivo}) - ${item.quantidade} KG`;
-        // Usa `splitTextToSize` para lidar com textos longos
         const splitText = pdf.splitTextToSize(text, pdfWidth - (margin * 2));
         pdf.text(splitText, margin, yPos);
-        yPos += (splitText.length * 5) + 2; // Avança a posição, 5mm por linha + 2mm de margem
+        yPos += (splitText.length * 5) + 2; 
         
-        // Se estiver perto do final da página, adicione uma nova
+        // Quebra de página para itens longos
         if (yPos > pdfHeight - 20) {
             pdf.addPage();
             yPos = margin;
@@ -669,7 +553,6 @@ async function generatePDFReport(action) {
     if (action === 'download') {
         pdf.save(fileName);
     } else if (action === 'share') {
-        // A melhor prática é o download, já que o compartilhamento direto de blobs é limitado
         alert("O PDF será baixado. Por favor, use a função de compartilhamento do seu visualizador de PDF.");
         pdf.save(fileName);
     }
