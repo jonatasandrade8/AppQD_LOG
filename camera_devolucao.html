@@ -71,7 +71,8 @@
             </div>
 
             <fieldset class="item-adder-fieldset">
-                <legend>Adicionar Itens da Devolução</legend>
+                <legend>Itens e Observações da Devolução</legend>
+                
                 <div class="input-group">
                     <label for="select-produto"><i class="fas fa-seedling"></i> Tipo do Produto</label>
                     <select id="select-produto" required>
@@ -88,25 +89,24 @@
 
                 <div class="input-group">
                     <label for="input-quantidade"><i class="fas fa-weight-hanging"></i> Quantidade (KG)</label>
-                    <input type="text" id="input-quantidade" placeholder="Ex: 25 kg, 3 caixas, 1/2 palete..." required 
-                           style="width: 100%; padding: 12px 15px; border: 2px solid var(--tertiary-color); border-radius: var(--border-radius); font-size: 1rem; color: var(--text-dark); background-color: var(--white); outline: none; transition: border-color 0.3s, box-shadow 0.3s;">
+                    <input type="text" id="input-quantidade" placeholder="Ex: 25 kg, 3 caixas, 1/2 palete..." required>
                 </div>
 
                 <button id="add-item-btn" class="action-btn" style="width: 100%; background-color: var(--primary-color); color: var(--white);">
                     <i class="fas fa-plus"></i> Adicionar Item à Lista
                 </button>
+                
+                <div id="item-list-container" class="item-list-container">
+                    <h3>Itens Adicionados</h3>
+                    <ul id="item-list">
+                        </ul>
+                </div>
+
+                <div class="input-group" style="margin-top: 20px;">
+                    <label for="input-observacoes"><i class="fas fa-pencil-alt"></i> Observações Gerais</label>
+                    <textarea id="input-observacoes" placeholder="Adicione qualquer observação relevante aqui..." rows="4"></textarea>
+                </div>
             </fieldset>
-
-            <div id="item-list-container" class="item-list-container">
-                <h3>Itens Adicionados</h3>
-                <ul id="item-list">
-                    </ul>
-            </div>
-
-            <div class="input-group">
-                <label for="input-observacoes"><i class="fas fa-pencil-alt"></i> Observações Gerais</label>
-                <textarea id="input-observacoes" placeholder="Adicione qualquer observação relevante aqui..." rows="4"></textarea>
-            </div>
             
             <div class="camera-button-area">
                 <button id="open-camera-btn" disabled>

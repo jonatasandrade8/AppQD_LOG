@@ -972,3 +972,124 @@ footer {
     box-shadow: 0 0 5px rgba(93, 63, 211, 0.5); /* Sombra roxa no foco */
     outline: none;
 }
+/* Variáveis de exemplo (Mantenha se você as usa, caso contrário, ajuste os valores) */
+:root {
+    --primary-color: #007bff; /* Exemplo de cor principal */
+    --secondary-color: #28a745; /* Exemplo de cor secundária (sucesso) */
+    --tertiary-color: #ffc107; /* Exemplo de cor terciária (aviso) */
+    --danger-color: #dc3545;
+    --background-light: #f8f9fa;
+    --white: #ffffff;
+    --text-dark: #343a40;
+    --border-radius: 8px;
+}
+
+/* Estilo para a nova estrutura do Fieldset */
+.item-adder-fieldset {
+    border: 2px solid var(--primary-color);
+    padding: 20px;
+    margin-top: 20px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: var(--white);
+}
+
+.item-adder-fieldset legend {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    padding: 0 10px;
+}
+
+/* Garante que o input-quantidade e textarea usem o estilo padrão de input-group */
+.input-group input[type="text"],
+.input-group select,
+.input-group textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid var(--tertiary-color);
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    color: var(--text-dark);
+    background-color: var(--white);
+    outline: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+/* Estilo para a Lista de Itens Adicionados */
+.item-list-container {
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: var(--border-radius);
+    background-color: var(--background-light);
+    border: 1px solid #ddd;
+}
+
+#item-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#item-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px dashed #ccc;
+    color: var(--text-dark);
+    font-size: 0.95rem;
+}
+
+#item-list li:last-child {
+    border-bottom: none;
+}
+
+#item-list .empty-list {
+    color: #6c757d;
+    font-style: italic;
+    text-align: center;
+}
+
+#item-list .delete-item-btn {
+    background: var(--danger-color);
+    color: var(--white);
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+#item-list .delete-item-btn:hover {
+    background: #c82333;
+}
+
+/* Estilo para a Caixa de Observações */
+#input-observacoes {
+    width: 100%;
+    min-height: 100px; /* Altura mínima para melhor visualização */
+    padding: 12px;
+    border: 2px solid var(--tertiary-color); /* Borda de destaque */
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    color: var(--text-dark);
+    background-color: var(--white);
+    resize: vertical; /* Permite redimensionar verticalmente */
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+#input-observacoes:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    outline: none;
+}
+
+/* Estilo do botão adicionar item */
+#add-item-btn {
+    margin-top: 10px;
+}
