@@ -1,4 +1,4 @@
-// ==================== ESTRUTURA DE DADOS PARA DROPDOWNS (DEVOLUÇÃO) ====================
+// ==================== ESTRUTURA de DADOS PARA DROPDOWNS (DEVOLUÇÃO) ====================
 const APP_DATA = {
     // Entregadores (lista independente)
     ENTREGADORES: [
@@ -102,14 +102,20 @@ const selectEntregador = document.getElementById('select-entregador');
 const selectRede = document.getElementById('select-rede'); 
 const selectLoja = document.getElementById('select-loja'); 
 
-// Elementos Específicos da Câmera de Devolução
+// Elementos Específicos da Câmera de Devolução (para adicionar itens)
 const selectMotivo = document.getElementById('select-motivo'); 
 const selectProduto = document.getElementById('select-produto'); 
 const inputQuantidade = document.getElementById('input-quantidade'); 
+const inputObservacoes = document.getElementById('input-observacoes'); 
+
+// Novos Elementos para a lista de itens
+const addItemBtn = document.getElementById('add-item-btn');
+const itemListElement = document.getElementById('item-list');
 
 let currentStream = null;
 let usingFrontCamera = false;
 let photos = [];
+let items = []; // NOVA: Armazena a lista de itens (produto, motivo, qtd)
 const localStorageKey = 'qdelicia_logistica_last_selection'; 
 
 // Carregar a imagem da logomarca
@@ -129,9 +135,7 @@ function saveSelection() {
         entregador: selectEntregador ? selectEntregador.value : '',
         rede: selectRede ? selectRede.value : '',
         loja: selectLoja ? selectLoja.value : '',
-        motivo: selectMotivo ? selectMotivo.value : '',
-        produto: selectProduto ? selectProduto.value : '',
-        quantidade: inputQuantidade ? inputQuantidade.value : '' 
+        observacoes: inputObservacoes ? inputObservacoes.value : '' // MODIFICADO
     };
     localStorage.setItem(localStorageKey, JSON.stringify(selection));
     checkCameraAccess();
@@ -181,7 +185,7 @@ function loadAndPopulateDropdowns() {
 
     // Popula campos específicos de Devolução
     populateSelect(selectMotivo, APP_DATA.MOTIVOS_DEVOLUCAO, "Selecione o Motivo");
-    populateSelect(selectProduto, APP_DATA.TIPOS_PRODUTO, "Selecione o Produto");
+    populateSelect(selectProduto, APP_DATA.TIPOS_PRODUO, "Selecione o Produto");
     
 
     const savedSelection = JSON.parse(localStorage.getItem(localStorageKey));
@@ -196,12 +200,60 @@ function loadAndPopulateDropdowns() {
         }
         
         // Carrega dados salvos específicos de Devolução
-        if (selectMotivo && savedSelection.motivo) selectMotivo.value = savedSelection.motivo;
-        if (selectProduto && savedSelection.produto) selectProduto.value = savedSelection.produto;
-        if (inputQuantidade && savedSelection.quantidade) inputQuantidade.value = savedSelection.quantidade; 
+        if (inputObservacoes && savedSelection.observacoes) inputObservacoes.value = savedSelection.observacoes; // MODIFICADO
     }
     
     checkCameraAccess();
+}
+
+// NOVA FUNÇÃO: Adiciona item na lista
+function handleAddItem() {
+    const produto = selectProduto.value;
+    const motivo = selectMotivo.value;
+    const quantidade = inputQuantidade.value.trim();
+
+    if (!produto || !motivo || !quantidade) {
+        alert("Por favor, preencha o Produto, Motivo e Quantidade para adicionar um item.");
+        return;
+    }
+
+    items.push({ produto, motivo, quantidade });
+    
+    updateItemListUI();
+    checkCameraAccess();
+
+    // Limpa os campos para o próximo item
+    selectProduto.value = "";
+    selectMotivo.value = "";
+    inputQuantidade.value = "";
+}
+
+// NOVA FUNÇÃO: Atualiza a lista de itens na UI
+function updateItemListUI() {
+    if (!itemListElement) return;
+
+    itemListElement.innerHTML = ''; // Limpa a lista
+    if (items.length === 0) {
+        itemListElement.innerHTML = '<li class="empty-list">Nenhum item adicionado.</li>';
+    }
+
+    items.forEach((item, index) => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+            <span><strong>${item.produto}</strong> (${item.motivo}) - ${item.quantidade} KG</span>
+            <button class="delete-item-btn" data-index="${index}" title="Remover item">
+                <i class="fas fa-trash"></i>
+            </button>
+        `;
+        
+        li.querySelector('.delete-item-btn').addEventListener('click', () => {
+            items.splice(index, 1); // Remove o item do array
+            updateItemListUI(); // Atualiza a UI
+            checkCameraAccess(); // Verifica o acesso à câmera novamente
+        });
+
+        itemListElement.appendChild(li);
+    });
 }
 
 function checkCameraAccess() {
@@ -211,13 +263,10 @@ function checkCameraAccess() {
                             selectRede && selectRede.value && 
                             selectLoja && selectLoja.value;
     
-    const quantidadeReady = inputQuantidade && inputQuantidade.value.trim() !== '';
-
-    // Validação para página de Devolução
-    const devFieldsReady = selectMotivo && selectMotivo.value &&
-                           selectProduto && selectProduto.value &&
-                           quantidadeReady;
-    isReady = baseFieldsReady && devFieldsReady;
+    // MODIFICADO: Validação agora checa se a lista de itens tem pelo menos 1 item
+    const itemsReady = items.length > 0;
+    
+    isReady = baseFieldsReady && itemsReady;
 
 
     if (openCameraBtn) {
@@ -228,7 +277,11 @@ function checkCameraAccess() {
                 : '<i class="fas fa-video"></i> Abrir Câmera'; 
         } else {
             openCameraBtn.disabled = true;
-            openCameraBtn.innerHTML = '<i class="fas fa-lock"></i> Preencha as Informações Acima';
+            if (!baseFieldsReady) {
+                openCameraBtn.innerHTML = '<i class="fas fa-lock"></i> Preencha Entregador/Rede/Loja';
+            } else {
+                openCameraBtn.innerHTML = '<i class="fas fa-plus"></i> Adicione Pelo Menos 1 Item';
+            }
         }
     }
     return isReady;
@@ -244,10 +297,9 @@ if (selectRede) {
 }
 if (selectLoja) selectLoja.addEventListener('change', saveSelection);
 
-// Listeners específicos de Devolução
-if (selectMotivo) selectMotivo.addEventListener('change', saveSelection);
-if (selectProduto) selectProduto.addEventListener('change', saveSelection);
-if (inputQuantidade) inputQuantidade.addEventListener('input', saveSelection); 
+// Listeners específicos de Devolução MODIFICADOS
+if (inputObservacoes) inputObservacoes.addEventListener('input', saveSelection); 
+if (addItemBtn) addItemBtn.addEventListener('click', handleAddItem);
 
 
 // --- LÓGICA DA CÂMERA (Marca d'água) ---
@@ -268,13 +320,15 @@ function drawWatermark(canvas, ctx) {
     lines.push(`Entregador: ${entregador}`);
     lines.push(`Rede: ${rede} || Loja: ${loja}`);
 
-    // Campos de Devolução
-    const motivo = selectMotivo ? selectMotivo.value || 'N/A' : 'N/A';
-    const produto = selectProduto ? selectProduto.value || 'N/A' : 'N/A';
-    const quantidade = inputQuantidade ? inputQuantidade.value.trim() : 'N/A';
-    
-    lines.push(`Motivo: ${motivo}`);
-    lines.push(`Produto: ${produto} || QTD: ${quantidade} KG`);
+    // MODIFICADO: Campos de Devolução vêm da lista 'items'
+    if (items.length > 0) {
+        lines.push(`--- ITENS DEVOLUÇÃO ---`);
+        items.forEach((item, index) => {
+            lines.push(`Item ${index + 1}: ${item.produto} (${item.motivo}) - ${item.quantidade} KG`);
+        });
+    } else {
+        lines.push("Nenhum item de devolução adicionado");
+    }
     
     
     // Configurações de Posição
@@ -398,13 +452,15 @@ function updateDateTimeWatermark() {
         watermarkContent += `<br>Entregador: ${entregador}`;
         watermarkContent += `<br>Rede: ${rede} || Loja: ${loja}`;
 
-        // Campos de Devolução
-        const motivo = selectMotivo ? selectMotivo.value || 'N/A' : 'N/A';
-        const produto = selectProduto ? selectProduto.value || 'N/A' : 'N/A';
-        const quantidade = inputQuantidade ? inputQuantidade.value.trim() : 'N/A';
-        
-        watermarkContent += `<br>Motivo: ${motivo}`;
-        watermarkContent += `<br>Produto: ${produto} || QTD: ${quantidade} KG`;
+        // MODIFICADO: Campos de Devolução vêm da lista 'items'
+        if (items.length > 0) {
+            watermarkContent += `<br>--- ITENS DEVOLUÇÃO ---`;
+            items.forEach((item, index) => {
+                watermarkContent += `<br>Item ${index + 1}: ${item.produto} (${item.motivo}) - ${item.quantidade} KG`;
+            });
+        } else {
+            watermarkContent += `<br>Nenhum item adicionado`;
+        }
         
         
         dateTimeElement.innerHTML = watermarkContent;
@@ -479,24 +535,104 @@ function updateGallery() {
     });
 }
 
-function downloadAllPhotos() {
-    if (photos.length === 0) return;
-    alert("Baixando todas as fotos..."); 
+// NOVA FUNÇÃO: Lógica de Geração de PDF (Stub)
+function generatePDFReport(action) {
+    if (photos.length === 0) {
+        alert("Tire pelo menos uma foto para gerar o relatório.");
+        return;
+    }
+    if (items.length === 0) {
+        alert("Adicione pelo menos um item de devolução para gerar o relatório.");
+        return;
+    }
 
+    // 1. Verifica se a biblioteca jsPDF está disponível
+    if (typeof jsPDF === 'undefined' || typeof html2canvas === 'undefined') {
+        alert("ERRO: As bibliotecas jsPDF e html2canvas são necessárias para gerar o PDF.\n\nPor favor, peça ao desenvolvedor para adicioná-las ao arquivo HTML.");
+        
+        console.warn("jsPDF ou html2canvas não encontrados.");
+        return;
+    }
+
+    // 2. Coletar todos os dados
+    const entregador = selectEntregador.value;
+    const rede = selectRede.value;
+    const loja = selectLoja.value;
+    const observacoes = inputObservacoes.value.trim() || 'Nenhuma';
+    const date = new Date().toLocaleString('pt-BR');
+    
+    alert("Iniciando geração do PDF... Isso pode levar um momento.");
+
+    // 3. Criar um contêiner HTML temporário para o conteúdo do PDF
+    const reportElement = document.createElement('div');
+    reportElement.style.width = '210mm'; // Tamanho A4
+    reportElement.style.padding = '10mm';
+    reportElement.style.fontFamily = 'Arial, sans-serif';
+    reportElement.style.fontSize = '12px';
+    
+    let reportContent = `
+        <img src="${logoImage.src}" style="width: 150px; margin-bottom: 10px;" alt="Logo">
+        <h1 style="font-size: 20px; border-bottom: 1px solid #ccc; padding-bottom: 5px;">Relatório de Devolução</h1>
+        <p><strong>Data:</strong> ${date}</p>
+        <p><strong>Entregador:</strong> ${entregador}</p>
+        <p><strong>Cliente:</strong> ${rede} - ${loja}</p>
+        
+        <h2 style="font-size: 16px; margin-top: 20px; border-bottom: 1px solid #eee; padding-bottom: 3px;">Itens da Devolução</h2>
+        <ul style="list-style-type: disc; padding-left: 20px;">
+    `;
+    
+    items.forEach(item => {
+        reportContent += `<li style="margin-bottom: 5px;"><strong>${item.produto}</strong> (${item.motivo}) - ${item.quantidade} KG</li>`;
+    });
+    
+    reportContent += `
+        </ul>
+        <h2 style="font-size: 16px; margin-top: 20px; border-bottom: 1px solid #eee; padding-bottom: 3px;">Observações</h2>
+        <p style="white-space: pre-wrap;">${observacoes}</p>
+        
+        <h2 style="font-size: 16px; margin-top: 20px; border-bottom: 1px solid #eee; padding-bottom: 3px;">Fotos</h2>
+    `;
+    
     photos.forEach((photoUrl, index) => {
-        const link = document.createElement('a');
-        link.href = photoUrl;
-        link.download = `qdelicia_registro_${index + 1}.jpg`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        reportContent += `
+            <div style="margin-top: 15px; page-break-inside: avoid;">
+                <p style="font-weight: bold;">Foto ${index + 1}</p>
+                <img src="${photoUrl}" style="width: 100%; max-width: 180mm; border: 1px solid #ccc; margin-top: 5px;">
+            </div>
+        `;
+    });
+
+    reportElement.innerHTML = reportContent;
+    document.body.appendChild(reportElement); // Adiciona ao DOM para o html2canvas ler
+
+    // 4. Usar html2canvas para renderizar o HTML e jsPDF para criar o PDF
+    html2canvas(reportElement, { scale: 2 }).then(canvas => {
+        document.body.removeChild(reportElement); // Remove o elemento temporário
+        
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF.jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        
+        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+        
+        const fileName = `relatorio_devolucao_${rede}_${loja}.pdf`;
+
+        if (action === 'download') {
+            pdf.save(fileName);
+        } else if (action === 'share') {
+            alert("A função de 'Compartilhar' gerará o PDF. Por favor, use a função de compartilhamento do seu visualizador de PDF após o download.");
+            // O compartilhamento direto de blobs de PDF é complexo e não universal
+            // A melhor abordagem é o download
+            pdf.save(fileName);
+        }
+    }).catch(err => {
+        console.error("Erro ao gerar PDF:", err);
+        alert("Ocorreu um erro ao gerar o relatório PDF.");
+        document.body.removeChild(reportElement);
     });
 }
 
-function shareAllPhotos() {
-    if (photos.length === 0) return;
-    alert("O compartilhamento de múltiplas imagens só é suportado via APIs nativas em Apps, ou manualmente no WhatsApp. Você pode baixar e compartilhar.");
-}
 
 // ==================== CÂMERA: EVENT LISTENERS ====================
 if (openCameraBtn) {
@@ -518,12 +654,15 @@ if (switchBtn) {
     });
 }
 
-if (downloadAllBtn) downloadAllBtn.addEventListener('click', downloadAllPhotos);
-if (shareAllBtn) shareAllBtn.addEventListener('click', shareAllPhotos);
+// MODIFICADO: Listeners para os botões de PDF
+if (downloadAllBtn) downloadAllBtn.addEventListener('click', () => generatePDFReport('download'));
+if (shareAllBtn) shareAllBtn.addEventListener('click', () => generatePDFReport('share'));
 
 
 // ==================== INICIALIZAÇÃO GERAL ====================
 window.addEventListener('load', () => {
     // Carrega as seleções salvas e preenche os dropdowns da câmera
     loadAndPopulateDropdowns(); 
+    // Inicializa a lista de itens vazia na UI
+    updateItemListUI();
 });

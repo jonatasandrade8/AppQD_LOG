@@ -7,7 +7,7 @@
     <title>Registro Devolução - Logística Qdelícia</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="./style.css"> 
-</head>
+    </head>
 <body class="camera-page">
     
     <div class="menu-overlay"></div>
@@ -66,24 +66,42 @@
                 </select>
             </div>
 
-            <div class="input-group">
-                <label for="select-motivo"><i class="fas fa-triangle-exclamation"></i> Motivo da Devolução</label>
-                <select id="select-motivo" required>
-                    <option value="" disabled selected>Selecione o Motivo</option>
-                </select>
+            <fieldset class="item-adder-fieldset">
+                <legend>Adicionar Itens da Devolução</legend>
+                <div class="input-group">
+                    <label for="select-produto"><i class="fas fa-seedling"></i> Tipo do Produto</label>
+                    <select id="select-produto" required>
+                        <option value="" disabled selected>Selecione o Produto</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="select-motivo"><i class="fas fa-triangle-exclamation"></i> Motivo da Devolução</label>
+                    <select id="select-motivo" required>
+                        <option value="" disabled selected>Selecione o Motivo</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="input-quantidade"><i class="fas fa-weight-hanging"></i> Quantidade (KG)</label>
+                    <input type="text" id="input-quantidade" placeholder="Ex: 25 kg, 3 caixas, 1/2 palete..." required 
+                           style="width: 100%; padding: 12px 15px; border: 2px solid var(--tertiary-color); border-radius: var(--border-radius); font-size: 1rem; color: var(--text-dark); background-color: var(--white); outline: none; transition: border-color 0.3s, box-shadow 0.3s;">
+                </div>
+
+                <button id="add-item-btn" class="action-btn" style="width: 100%; background-color: var(--primary-color); color: var(--white);">
+                    <i class="fas fa-plus"></i> Adicionar Item à Lista
+                </button>
+            </fieldset>
+
+            <div id="item-list-container" class="item-list-container">
+                <h3>Itens Adicionados</h3>
+                <ul id="item-list">
+                    </ul>
             </div>
 
             <div class="input-group">
-                <label for="select-produto"><i class="fas fa-seedling"></i> Tipo do Produto</label>
-                <select id="select-produto" required>
-                    <option value="" disabled selected>Selecione o Produto</option>
-                </select>
-            </div>
-
-            <div class="input-group">
-                <label for="input-quantidade"><i class="fas fa-weight-hanging"></i> Quantidade (KG)</label>
-                <input type="text" id="input-quantidade" placeholder="Ex: 25 kg, 3 caixas, 1/2 palete..." required 
-                       style="width: 100%; padding: 12px 15px; border: 2px solid var(--tertiary-color); border-radius: var(--border-radius); font-size: 1rem; color: var(--text-dark); background-color: var(--white); outline: none; transition: border-color 0.3s, box-shadow 0.3s;">
+                <label for="input-observacoes"><i class="fas fa-pencil-alt"></i> Observações Gerais</label>
+                <textarea id="input-observacoes" placeholder="Adicione qualquer observação relevante aqui..." rows="4"></textarea>
             </div>
             
             <div class="camera-button-area">
@@ -97,10 +115,10 @@
             <h2>Galeria de Registros</h2>
             <div class="action-buttons">
                 <button class="action-btn share-btn" id="share-all" disabled>
-                  <i class="fas fa-share-alt"></i> Compartilhar
+                  <i class="fas fa-share-alt"></i> Compartilhar PDF
                 </button>
                 <button class="action-btn download-btn" id="download-all" disabled>
-                  <i class="fas fa-download"></i> Baixar Todas
+                  <i class="fas fa-download"></i> Baixar Relatório (PDF)
                 </button>
             </div>
             
