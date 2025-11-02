@@ -91,7 +91,6 @@ const backToGalleryBtn = document.getElementById('back-to-gallery-btn');
 const video = document.getElementById('video');
 const shutterBtn = document.getElementById('shutter-btn');
 const switchBtn = document.getElementById('switch-btn');
-// const dateTimeElement = document.getElementById('date-time'); <--- REMOVIDO: Elemento de Marca D'água
 const photoList = document.getElementById('photo-list');
 const downloadAllBtn = document.getElementById('download-all');
 const shareAllBtn = document.getElementById('share-all');
@@ -297,12 +296,6 @@ if (addItemBtn) addItemBtn.addEventListener('click', handleAddItem);
 
 // --- LÓGICA DA CÂMERA (SEM MARCA D'ÁGUA) ---
 
-/**
- * REMOVIDO: A função drawWatermark foi completamente removida.
- */
-// function drawWatermark(canvas, ctx) { ... }
-
-
 function startCamera(facingMode = 'environment') {
     if (currentStream) stopCamera(); 
 
@@ -322,7 +315,6 @@ function startCamera(facingMode = 'environment') {
             checkCameraAccess(); 
             if (fullscreenCameraContainer) {
                 fullscreenCameraContainer.style.display = 'flex';
-                // updateDateTimeWatermark(); <--- REMOVIDO: Nenhuma marca d'água na pré-visualização
             }
         })
         .catch(err => {
@@ -347,16 +339,6 @@ function stopCamera() {
     checkCameraAccess();
 }
 
-/**
- * REMOVIDO: A função updateDateTimeWatermark foi removida,
- * pois não haverá marca d'água de data/hora na pré-visualização.
- */
-// function updateDateTimeWatermark() { ... }
-
-
-/**
- * CONFIRMADO: As fotos agora são capturadas limpas, sem marca d'água.
- */
 function takePhoto() {
     if (!currentStream) {
         alert("A câmera não está ativa.");
@@ -369,8 +351,6 @@ function takePhoto() {
     
     const ctx = canvas.getContext('2d');
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
-    // drawWatermark(canvas, ctx); <--- Não está aqui. Foto limpa.
 
     const photoDataUrl = canvas.toDataURL('image/jpeg', 0.9);
     photos.push(photoDataUrl);
@@ -553,21 +533,35 @@ async function generatePDFReport(action) {
     if (action === 'download') {
         pdf.save(fileName);
     } else if (action === 'share') {
-        pdf.save(fileName); // 1. Garante que o PDF seja baixado
-
-        const summaryText = `*RELATÓRIO DE DEVOLUÇÃO QDELÍCIA*\n\n` +
-                            `*Entregador:* ${entregador}\n` +
-                            `*Rede/Loja:* ${rede} - ${loja}\n` +
-                            `*Data/Hora:* ${date}\n` +
-                            `*Total de Itens Devolvidos:* ${items.length}\n` +
-                            `*Observações:* ${observacoes.substring(0, 150)}${observacoes.length > 150 ? '...' : ''}\n\n` +
-                            `🚨 *Atenção:* O arquivo PDF (${fileName}) com todas as fotos e detalhes foi baixado para o seu dispositivo. *Anexe este PDF* a esta mensagem antes de enviar.`;
+        // Converte o PDF para Blob
+        const pdfBlob = pdf.output('blob');
         
-        const whatsappUrl = `whatsapp://send?text=${encodeURIComponent(summaryText)}`;
-        window.open(whatsappUrl, '_blank');
-        
-        // Alerta para orientar o usuário a anexar o arquivo.
-        alert(`O PDF "${fileName}" foi baixado. O WhatsApp será aberto em seguida. Por favor, *anexe o PDF baixado* à mensagem antes de enviar!`);
+        // Verifica se a API Web Share está disponível e suporta arquivos
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([pdfBlob], fileName)] })) {
+            try {
+                const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
+                await navigator.share({
+                    files: [file],
+                    title: 'Relatório de Devolução QDelícia'
+                });
+                alert('PDF compartilhado com sucesso!');
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    console.error('Erro ao compartilhar:', error);
+                    // Fallback: baixa o arquivo e abre o WhatsApp
+                    pdf.save(fileName);
+                    const whatsappUrl = 'whatsapp://';
+                    window.open(whatsappUrl, '_blank');
+                    alert(`O PDF "${fileName}" foi baixado. Abra o WhatsApp e anexe o arquivo manualmente.`);
+                }
+            }
+        } else {
+            // Fallback para dispositivos que não suportam Web Share API
+            pdf.save(fileName);
+            const whatsappUrl = 'whatsapp://';
+            window.open(whatsappUrl, '_blank');
+            alert(`O PDF "${fileName}" foi baixado. Abra o WhatsApp e anexe o arquivo manualmente.`);
+        }
     }
 }
 
