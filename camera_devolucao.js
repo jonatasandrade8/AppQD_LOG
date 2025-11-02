@@ -553,8 +553,21 @@ async function generatePDFReport(action) {
     if (action === 'download') {
         pdf.save(fileName);
     } else if (action === 'share') {
-        alert("O PDF será baixado. Por favor, use a função de compartilhamento do seu visualizador de PDF.");
-        pdf.save(fileName);
+        pdf.save(fileName); // 1. Garante que o PDF seja baixado
+
+        const summaryText = `*RELATÓRIO DE DEVOLUÇÃO QDELÍCIA*\n\n` +
+                            `*Entregador:* ${entregador}\n` +
+                            `*Rede/Loja:* ${rede} - ${loja}\n` +
+                            `*Data/Hora:* ${date}\n` +
+                            `*Total de Itens Devolvidos:* ${items.length}\n` +
+                            `*Observações:* ${observacoes.substring(0, 150)}${observacoes.length > 150 ? '...' : ''}\n\n` +
+                            `🚨 *Atenção:* O arquivo PDF (${fileName}) com todas as fotos e detalhes foi baixado para o seu dispositivo. *Anexe este PDF* a esta mensagem antes de enviar.`;
+        
+        const whatsappUrl = `whatsapp://send?text=${encodeURIComponent(summaryText)}`;
+        window.open(whatsappUrl, '_blank');
+        
+        // Alerta para orientar o usuário a anexar o arquivo.
+        alert(`O PDF "${fileName}" foi baixado. O WhatsApp será aberto em seguida. Por favor, *anexe o PDF baixado* à mensagem antes de enviar!`);
     }
 }
 
