@@ -974,9 +974,9 @@ footer {
 }
 /* Variáveis de exemplo (Mantenha se você as usa, caso contrário, ajuste os valores) */
 :root {
-    --primary-color: #007bff; /* Exemplo de cor principal */
-    --secondary-color: #28a745; /* Exemplo de cor secundária (sucesso) */
-    --tertiary-color: #ffc107; /* Exemplo de cor terciária (aviso) */
+    --primary-color: #5d3fd3; /* Roxo principal */
+    --secondary-color: #8b5cf6; /* Roxo mais claro */
+    --tertiary-color: #a78bfa; /* Roxo ainda mais claro */
     --danger-color: #dc3545;
     --background-light: #f8f9fa;
     --white: #ffffff;
