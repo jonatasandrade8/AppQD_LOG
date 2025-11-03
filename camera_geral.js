@@ -22,7 +22,7 @@ const APP_DATA = {
     REDES_LOJAS: {
         "Atacadão": ["BR 101 - SUL", "Parnammirim", "Prudente", "Zona Norte"],
         "Assaí": ["Ponta negra", "Maria Lacerda", "BR 101 - SUL", "Zona Norte"],
-        "Superfácil": ["Emaús", "Nazaré", "Olho dágua"],
+        "Superfácil": ["Emáus", "Nazaré", "Olho dágua"],
         "Nordestão": ["Loja 1", "Loja 2", "Loja 3", "Loja 4", "Loja 5", "Loja 6", "Loja 7", "Loja 8"],
         "Carrefour": ["Sul", "Norte"],
         "Mar Vermelho": ["Natal", "Parnamirim"],
@@ -86,7 +86,7 @@ const downloadAllBtn = document.getElementById('download-all');
 const shareAllBtn = document.getElementById('share-all');
 const photoCountElement = document.getElementById('photo-count');
 
-// Elementos para Marca D'água (Específicos da Câmera Geral)
+// Elementos para Marca D'Água (Específicos da Câmera Geral)
 const selectEntregador = document.getElementById('select-entregador'); 
 const selectRede = document.getElementById('select-rede'); 
 const selectLoja = document.getElementById('select-loja'); 
@@ -217,7 +217,7 @@ if (selectRede) {
 if (selectLoja) selectLoja.addEventListener('change', saveSelection);
 
 
-// --- LÓGICA DA CÂMERA (Marca d'água) ---
+// --- LÓGICA DA CÂMERA (Marca d'Água) ---
 
 function drawWatermark(canvas, ctx) {
     const entregador = selectEntregador ? selectEntregador.value || 'N/A' : 'N/A';
@@ -415,7 +415,7 @@ function updateGallery() {
         downloadBtn.classList.add('icon-btn', 'download-icon');
         downloadBtn.innerHTML = '<i class="fas fa-download"></i>';
         
-        // --- ESTE É O BOTÃO DE LIXEIRA ---
+        // --- BOTÃO DE LIXEIRA ---
         const deleteBtn = document.createElement('button');
         deleteBtn.classList.add('icon-btn', 'delete-icon');
         deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
@@ -449,9 +449,33 @@ function downloadAllPhotos() {
     });
 }
 
+
 // ==================================================================
-// === INÍCIO DAS NOVAS FUNÇÕES DE COMPARTILHAMENTO ===
+// === FUNÇÕES DE GERAÇÃO DE LEGENDA E COMPARTILHAMENTO ===
 // ==================================================================
+
+/**
+ * Gera a legenda com as mesmas informações da marca d'água
+ */
+function generateCaption() {
+    const entregador = selectEntregador ? selectEntregador.value || 'N/A' : 'N/A';
+    const rede = selectRede ? selectRede.value || 'N/A' : 'N/A';
+    const loja = selectLoja ? selectLoja.value || 'N/A' : 'N/A';
+    const status = selectStatus && selectStatus.value ? selectStatus.value.toUpperCase() : 'N/A';
+
+    const date = new Date();
+    const dateTimeText = date.toLocaleDateString('pt-BR', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+    });
+
+    let caption = `${dateTimeText}\n`;
+    caption += `Entregador: ${entregador}\n`;
+    caption += `Rede: ${rede} || Loja: ${loja}\n`;
+    caption += `STATUS: ${status}`;
+
+    return caption;
+}
 
 /**
  * Converte uma string dataURL (base64) em um objeto File.
@@ -474,8 +498,7 @@ function dataURLtoFile(dataurl, filename) {
 
 
 /**
- * (SUBSTITUÍDA) Tenta compartilhar todas as fotos usando a Web Share API nativa.
- * Isso garante que elas sejam tratadas como fotos, não arquivos.
+ * Compartilha todas as fotos com legenda contendo as informações da marca d'água
  */
 async function shareAllPhotos() {
     if (photos.length === 0) return;
@@ -485,18 +508,21 @@ async function shareAllPhotos() {
         return dataURLtoFile(photoUrl, `qdelicia_registro_${index + 1}.jpg`);
     });
 
-    // 2. Verificar se o navegador suporta compartilhamento de arquivos
+    // 2. Gerar a legenda com as informações da marca d'água
+    const caption = generateCaption();
+
+    // 3. Verificar se o navegador suporta compartilhamento de arquivos
     if (navigator.share && navigator.canShare && navigator.canShare({ files: files })) {
         try {
-            // 3. Tentar compartilhar os arquivos (WhatsApp, etc., lerão o 'type' dos arquivos)
+            // 4. Compartilhar com a legenda incluída
             await navigator.share({
                 title: 'Registros Logística Qdelícia',
-                text: `Compartilhando ${files.length} registro(s) da operação.`,
+                text: caption, // A legenda com os dados da marca d'água
                 files: files
             });
             console.log('Fotos compartilhadas com sucesso.');
         } catch (error) {
-            // 4. Lidar com erros (ex: usuário cancelou o compartilhamento)
+            // 5. Lidar com erros (ex: usuário cancelou o compartilhamento)
             if (error.name !== 'AbortError') {
                 console.error('Erro ao compartilhar:', error);
                 alert('Ocorreu um erro ao tentar compartilhar as fotos.');
@@ -505,13 +531,13 @@ async function shareAllPhotos() {
             }
         }
     } else {
-        // 5. Fallback para navegadores que não suportam (ex: Desktop ou HTTP)
+        // 6. Fallback para navegadores que não suportam
         alert("Seu navegador não suporta o compartilhamento direto de arquivos. Por favor, baixe as fotos e compartilhe manualmente.");
     }
 }
 
 // ==================================================================
-// === FIM DAS NOVAS FUNÇÕES DE COMPARTILHAMENTO ===
+// === FIM DAS FUNÇÕES DE COMPARTILHAMENTO ===
 // ==================================================================
 
 
