@@ -83,7 +83,7 @@ const switchBtn = document.getElementById('switch-btn');
 const dateTimeElement = document.getElementById('date-time');
 const photoList = document.getElementById('photo-list');
 const downloadAllBtn = document.getElementById('download-all');
-const shareAllBtn = document.getElementById('share-all'); // ID CORRETO: share-all
+const shareAllBtn = document.getElementById('share-all');
 const photoCountElement = document.getElementById('photo-count');
 
 // Elementos para Marca D'água (Específicos da Câmera Geral)
@@ -450,7 +450,7 @@ function downloadAllPhotos() {
 }
 
 // ==================================================================
-// === FUNÇÕES DE COMPARTILHAMENTO (CORRIGIDAS E MODIFICADAS) ===
+// === INÍCIO DAS NOVAS FUNÇÕES DE COMPARTILHAMENTO ===
 // ==================================================================
 
 /**
@@ -474,50 +474,29 @@ function dataURLtoFile(dataurl, filename) {
 
 
 /**
- * Tenta compartilhar todas as fotos usando a Web Share API nativa.
- * **AGORA INCLUI AS INFORMAÇÕES DE REGISTRO NA LEGENDA (TEXTO).**
+ * (SUBSTITUÍDA) Tenta compartilhar todas as fotos usando a Web Share API nativa.
+ * Isso garante que elas sejam tratadas como fotos, não arquivos.
  */
 async function shareAllPhotos() {
     if (photos.length === 0) return;
 
-    // 1. Obter as informações para a legenda (usando as seleções atuais)
-    // ESSA LÓGICA GARANTE QUE OS DADOS DOS DROPDOWNS SEJAM USADOS NA LEGENDA.
-    const entregador = selectEntregador ? selectEntregador.value || 'N/A' : 'N/A';
-    const rede = selectRede ? selectRede.value || 'N/A' : 'N/A';
-    const loja = selectLoja ? selectLoja.value || 'N/A' : 'N/A';
-    const status = selectStatus && selectStatus.value ? selectStatus.value.toUpperCase() : 'N/A';
-
-    const date = new Date();
-    const dateTimeText = date.toLocaleDateString('pt-BR', {
-        day: '2-digit', month: '2-digit', year: 'numeric',
-        hour: '2-digit', minute: '2-digit', second: '2-digit'
-    });
-
-    // Cria a legenda com todos os dados solicitados
-    const shareText = `**REGISTRO LOGÍSTICA QDELÍCIA (${photos.length} fotos)**\n\n` +
-                      `Data/Hora: ${dateTimeText}\n` +
-                      `Entregador: ${entregador}\n` +
-                      `Rede/Cliente: ${rede}\n` +
-                      `Loja/PDV: ${loja}\n` +
-                      `Status: ${status}`;
-
-    // 2. Converter todas as fotos (data URLs) em objetos File
+    // 1. Converter todas as fotos (data URLs) em objetos File
     const files = photos.map((photoUrl, index) => {
         return dataURLtoFile(photoUrl, `qdelicia_registro_${index + 1}.jpg`);
     });
 
-    // 3. Verificar se o navegador suporta compartilhamento de arquivos
+    // 2. Verificar se o navegador suporta compartilhamento de arquivos
     if (navigator.share && navigator.canShare && navigator.canShare({ files: files })) {
         try {
-            // 4. Tentar compartilhar os arquivos com o texto dinâmico
+            // 3. Tentar compartilhar os arquivos (WhatsApp, etc., lerão o 'type' dos arquivos)
             await navigator.share({
                 title: 'Registros Logística Qdelícia',
-                text: shareText, // <-- AGORA COM O TEXTO DINÂMICO
+                text: `Compartilhando ${files.length} registro(s) da operação.`,
                 files: files
             });
             console.log('Fotos compartilhadas com sucesso.');
         } catch (error) {
-            // 5. Lidar com erros (ex: usuário cancelou o compartilhamento)
+            // 4. Lidar com erros (ex: usuário cancelou o compartilhamento)
             if (error.name !== 'AbortError') {
                 console.error('Erro ao compartilhar:', error);
                 alert('Ocorreu um erro ao tentar compartilhar as fotos.');
@@ -526,13 +505,13 @@ async function shareAllPhotos() {
             }
         }
     } else {
-        // 6. Fallback para navegadores que não suportam (ex: Desktop ou HTTP)
-        alert(`Seu navegador não suporta o compartilhamento direto de arquivos. Por favor, baixe as fotos e compartilhe manualmente, copiando este texto:\n\n${shareText}`);
+        // 5. Fallback para navegadores que não suportam (ex: Desktop ou HTTP)
+        alert("Seu navegador não suporta o compartilhamento direto de arquivos. Por favor, baixe as fotos e compartilhe manualmente.");
     }
 }
 
 // ==================================================================
-// === FIM DAS FUNÇÕES DE COMPARTILHAMENTO (CORRIGIDAS E MODIFICADAS) ===
+// === FIM DAS NOVAS FUNÇÕES DE COMPARTILHAMENTO ===
 // ==================================================================
 
 
@@ -557,7 +536,8 @@ if (switchBtn) {
 }
 
 if (downloadAllBtn) downloadAllBtn.addEventListener('click', downloadAllPhotos);
-if (shareAllBtn) shareAllBtn.addEventListener('click', shareAllPhotos); // EVENT LISTENER CORRETO
+if (shareAllBtn) shareAllBtn.addEventListener('click', shareAllPhotos);
+
 
 // ==================== INICIALIZAÇÃO GERAL ====================
 window.addEventListener('load', () => {
