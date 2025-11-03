@@ -290,7 +290,7 @@ function drawWatermark(canvas, ctx) {
     const logoBgWidth = logoWidth + 2 * logoBgPadding;
     const logoBgHeight = logoHeight + 2 * logoBgPadding;
     
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.0)'; 
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'; 
     ctx.fillRect(xLogo - logoBgPadding, yLogo - logoBgPadding, logoBgWidth, logoBgHeight);
 
     if (logoImage.complete && logoImage.naturalHeight !== 0) {
@@ -397,7 +397,7 @@ function updateGallery() {
 
     if (photoCountElement) photoCountElement.textContent = photos.length;
     
-    const hasPhotos = photos.length >= 0;
+    const hasPhotos = photos.length > 0;
     if (downloadAllBtn) downloadAllBtn.disabled = !hasPhotos;
     if (shareAllBtn) shareAllBtn.disabled = !hasPhotos;
     
@@ -512,27 +512,42 @@ async function shareAllPhotos() {
     const caption = generateCaption();
 
     // 3. Verificar se o navegador suporta compartilhamento de arquivos
-    if (navigator.share && navigator.canShare && navigator.canShare({ files: files })) {
-        try {
-            // 4. Compartilhar com a legenda incluída
-            await navigator.share({
-                title: 'Registros Logística Qdelícia',
-                text: caption, // A legenda com os dados da marca d'água
-                files: files
-            });
-            console.log('Fotos compartilhadas com sucesso.');
-        } catch (error) {
-            // 5. Lidar com erros (ex: usuário cancelou o compartilhamento)
-            if (error.name !== 'AbortError') {
-                console.error('Erro ao compartilhar:', error);
-                alert('Ocorreu um erro ao tentar compartilhar as fotos.');
-            } else {
-                console.log('Compartilhamento cancelado pelo usuário.');
+    if (navigator.share && navigator.canShare) {
+        // Verificar se pode compartilhar com arquivos e texto
+        const shareData = {
+            title: 'Registros Logística Qdelícia',
+            text: caption,
+            files: files
+        };
+
+        // Se não conseguir compartilhar com arquivos, tenta só com texto
+        let canShare = navigator.canShare(shareData);
+        
+        if (!canShare && files.length > 0) {
+            canShare = navigator.canShare({ files: files });
+        }
+
+        if (canShare) {
+            try {
+                // 4. Compartilhar com a legenda incluída
+                await navigator.share(shareData);
+                console.log('Fotos compartilhadas com sucesso.');
+            } catch (error) {
+                // 5. Lidar com erros (ex: usuário cancelou o compartilhamento)
+                if (error.name !== 'AbortError') {
+                    console.error('Erro ao compartilhar:', error);
+                    alert('Ocorreu um erro ao tentar compartilhar as fotos.');
+                } else {
+                    console.log('Compartilhamento cancelado pelo usuário.');
+                }
             }
+        } else {
+            // 6. Fallback para navegadores que não suportam
+            alert("Seu navegador não suporta o compartilhamento direto de arquivos. Por favor, baixe as fotos e compartilhe manualmente.");
         }
     } else {
-        // 6. Fallback para navegadores que não suportam
-        alert("Seu navegador não suporta o compartilhamento direto de arquivos. Por favor, baixe as fotos e compartilhe manualmente.");
+        // 7. Navegador não suporta Web Share API
+        alert("Seu navegador não suporta compartilhamento. Por favor, baixe as fotos e compartilhe manualmente.");
     }
 }
 
