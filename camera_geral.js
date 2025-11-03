@@ -397,7 +397,7 @@ function updateGallery() {
 
     if (photoCountElement) photoCountElement.textContent = photos.length;
     
-    const hasPhotos = photos.length > 0;
+    const hasPhotos = photos.length >= 0;
     if (downloadAllBtn) downloadAllBtn.disabled = !hasPhotos;
     if (shareAllBtn) shareAllBtn.disabled = !hasPhotos;
     
