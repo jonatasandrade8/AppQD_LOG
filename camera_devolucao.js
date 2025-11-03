@@ -21,10 +21,11 @@ const APP_DATA = {
     
     // Dados Adicionais para a Câmera de Devolução
     MOTIVOS_DEVOLUCAO: [
-        "Maturação elevada",
+        "Muito Madura",
+        "Muito Arranhada",
+        "Tamanho Fora do Padrão",
         "Atraso na Entrega",
-        "Qualidade baixa",
-        "Peso alt.",
+        "Peso Alterado",
         "Outro Motivo"
     ],
     
