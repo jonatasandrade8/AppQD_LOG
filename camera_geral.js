@@ -83,7 +83,7 @@ const switchBtn = document.getElementById('switch-btn');
 const dateTimeElement = document.getElementById('date-time');
 const photoList = document.getElementById('photo-list');
 const downloadAllBtn = document.getElementById('download-all');
-const shareAllBtn = document.getElementById('share-all');
+const shareAllBtn = document.getElementById('share-all'); // ID CORRETO: share-all
 const photoCountElement = document.getElementById('photo-count');
 
 // Elementos para Marca D'água (Específicos da Câmera Geral)
@@ -450,7 +450,7 @@ function downloadAllPhotos() {
 }
 
 // ==================================================================
-// === FUNÇÕES DE COMPARTILHAMENTO (MODIFICADAS) ===
+// === FUNÇÕES DE COMPARTILHAMENTO (CORRIGIDAS E MODIFICADAS) ===
 // ==================================================================
 
 /**
@@ -481,6 +481,7 @@ async function shareAllPhotos() {
     if (photos.length === 0) return;
 
     // 1. Obter as informações para a legenda (usando as seleções atuais)
+    // ESSA LÓGICA GARANTE QUE OS DADOS DOS DROPDOWNS SEJAM USADOS NA LEGENDA.
     const entregador = selectEntregador ? selectEntregador.value || 'N/A' : 'N/A';
     const rede = selectRede ? selectRede.value || 'N/A' : 'N/A';
     const loja = selectLoja ? selectLoja.value || 'N/A' : 'N/A';
@@ -531,7 +532,7 @@ async function shareAllPhotos() {
 }
 
 // ==================================================================
-// === FIM DAS FUNÇÕES DE COMPARTILHAMENTO (MODIFICADAS) ===
+// === FIM DAS FUNÇÕES DE COMPARTILHAMENTO (CORRIGIDAS E MODIFICADAS) ===
 // ==================================================================
 
 
@@ -556,8 +557,7 @@ if (switchBtn) {
 }
 
 if (downloadAllBtn) downloadAllBtn.addEventListener('click', downloadAllPhotos);
-if (shareAllBtn) shareAllBtn.addEventListener('click', shareAllPhotos);
-
+if (shareAllBtn) shareAllBtn.addEventListener('click', shareAllPhotos); // EVENT LISTENER CORRETO
 
 // ==================== INICIALIZAÇÃO GERAL ====================
 window.addEventListener('load', () => {
