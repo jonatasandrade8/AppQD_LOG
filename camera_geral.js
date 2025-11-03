@@ -450,7 +450,7 @@ function downloadAllPhotos() {
 }
 
 // ==================================================================
-// === INÍCIO DAS NOVAS FUNÇÕES DE COMPARTILHAMENTO ===
+// === FUNÇÕES DE COMPARTILHAMENTO (MODIFICADAS) ===
 // ==================================================================
 
 /**
@@ -464,7 +464,7 @@ function dataURLtoFile(dataurl, filename) {
     const mime = arr[0].match(/:(.*?);/)[1]; // Ex: 'image/jpeg'
     const bstr = atob(arr[1]);
     let n = bstr.length;
-    const u8arr = new Uint8arr(n);
+    const u8arr = new Uint8Array(n);
     while(n--){
         u8arr[n] = bstr.charCodeAt(n);
     }
@@ -474,7 +474,7 @@ function dataURLtoFile(dataurl, filename) {
 
 
 /**
- * (SUBSTITUÍDA) Tenta compartilhar todas as fotos usando a Web Share API nativa.
+ * Tenta compartilhar todas as fotos usando a Web Share API nativa.
  * **AGORA INCLUI AS INFORMAÇÕES DE REGISTRO NA LEGENDA (TEXTO).**
  */
 async function shareAllPhotos() {
@@ -531,7 +531,7 @@ async function shareAllPhotos() {
 }
 
 // ==================================================================
-// === FIM DAS NOVAS FUNÇÕES DE COMPARTILHAMENTO ===
+// === FIM DAS FUNÇÕES DE COMPARTILHAMENTO (MODIFICADAS) ===
 // ==================================================================
 
 
