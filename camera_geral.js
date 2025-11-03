@@ -290,7 +290,7 @@ function drawWatermark(canvas, ctx) {
     const logoBgWidth = logoWidth + 2 * logoBgPadding;
     const logoBgHeight = logoHeight + 2 * logoBgPadding;
     
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'; 
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.0)'; 
     ctx.fillRect(xLogo - logoBgPadding, yLogo - logoBgPadding, logoBgWidth, logoBgHeight);
 
     if (logoImage.complete && logoImage.naturalHeight !== 0) {
