@@ -94,7 +94,7 @@ const selectStatus = document.getElementById('select-status');
 
 let currentStream = null;
 let usingFrontCamera = false;
-let photos = [];
+let photos = []; // Array de fotos não é persistido
 const localStorageKey = 'qdelicia_logistica_last_selection'; 
 
 // Carregar a imagem da logomarca
@@ -116,6 +116,7 @@ function saveSelection() {
         loja: selectLoja ? selectLoja.value : '',
         status: selectStatus ? selectStatus.value : '', 
     };
+    // Salva APENAS as seleções, não o array 'photos'
     localStorage.setItem(localStorageKey, JSON.stringify(selection));
     checkCameraAccess();
 }
@@ -414,13 +415,15 @@ function updateGallery() {
         downloadBtn.classList.add('icon-btn', 'download-icon');
         downloadBtn.innerHTML = '<i class="fas fa-download"></i>';
         
+        // --- ESTE É O BOTÃO DE LIXEIRA ---
         const deleteBtn = document.createElement('button');
         deleteBtn.classList.add('icon-btn', 'delete-icon');
         deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
         deleteBtn.addEventListener('click', () => {
-            photos.splice(index, 1);
-            updateGallery(); 
+            photos.splice(index, 1); // Remove a foto do array
+            updateGallery(); // Atualiza a galeria
         });
+        // --- FIM DO BOTÃO DE LIXEIRA ---
 
         const controlsContainer = document.createElement('div');
         controlsContainer.classList.add('photo-controls');
@@ -428,7 +431,7 @@ function updateGallery() {
         controlsContainer.appendChild(deleteBtn);
         
         photoItem.appendChild(controlsContainer);
-        photoList.prepend(photoItem); 
+        photoList.prepend(photoItem); // .prepend para a mais nova aparecer primeiro
     });
 }
 
@@ -446,10 +449,71 @@ function downloadAllPhotos() {
     });
 }
 
-function shareAllPhotos() {
-    if (photos.length === 0) return;
-    alert("O compartilhamento de múltiplas imagens só é suportado via APIs nativas em Apps, ou manualmente no WhatsApp. Você pode baixar e compartilhar.");
+// ==================================================================
+// === INÍCIO DAS NOVAS FUNÇÕES DE COMPARTILHAMENTO ===
+// ==================================================================
+
+/**
+ * Converte uma string dataURL (base64) em um objeto File.
+ * @param {string} dataurl - A string dataURL da imagem (que já é 'image/jpeg')
+ * @param {string} filename - O nome do arquivo a ser criado.
+ * @returns {File} - O objeto File com o tipo MIME correto.
+ */
+function dataURLtoFile(dataurl, filename) {
+    const arr = dataurl.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1]; // Ex: 'image/jpeg'
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while(n--){
+        u8arr[n] = bstr.charCodeAt(n);
+    }
+    // Cria o arquivo preservando o tipo (MIME type)
+    return new File([u8arr], filename, {type:mime});
 }
+
+
+/**
+ * (SUBSTITUÍDA) Tenta compartilhar todas as fotos usando a Web Share API nativa.
+ * Isso garante que elas sejam tratadas como fotos, não arquivos.
+ */
+async function shareAllPhotos() {
+    if (photos.length === 0) return;
+
+    // 1. Converter todas as fotos (data URLs) em objetos File
+    const files = photos.map((photoUrl, index) => {
+        return dataURLtoFile(photoUrl, `qdelicia_registro_${index + 1}.jpg`);
+    });
+
+    // 2. Verificar se o navegador suporta compartilhamento de arquivos
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: files })) {
+        try {
+            // 3. Tentar compartilhar os arquivos (WhatsApp, etc., lerão o 'type' dos arquivos)
+            await navigator.share({
+                title: 'Registros Logística Qdelícia',
+                text: `Compartilhando ${files.length} registro(s) da operação.`,
+                files: files
+            });
+            console.log('Fotos compartilhadas com sucesso.');
+        } catch (error) {
+            // 4. Lidar com erros (ex: usuário cancelou o compartilhamento)
+            if (error.name !== 'AbortError') {
+                console.error('Erro ao compartilhar:', error);
+                alert('Ocorreu um erro ao tentar compartilhar as fotos.');
+            } else {
+                console.log('Compartilhamento cancelado pelo usuário.');
+            }
+        }
+    } else {
+        // 5. Fallback para navegadores que não suportam (ex: Desktop ou HTTP)
+        alert("Seu navegador não suporta o compartilhamento direto de arquivos. Por favor, baixe as fotos e compartilhe manualmente.");
+    }
+}
+
+// ==================================================================
+// === FIM DAS NOVAS FUNÇÕES DE COMPARTILHAMENTO ===
+// ==================================================================
+
 
 // ==================== CÂMERA: EVENT LISTENERS ====================
 if (openCameraBtn) {
